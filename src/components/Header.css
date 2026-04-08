@@ -1,0 +1,185 @@
+/* ===== HEADER WRAPPER ===== */
+.headerWrapper {
+  width: 100%;
+  background: #fffaf7; /* Soft ivory for a premium look */
+  font-family: "Segoe UI", sans-serif;
+}
+
+/* ===== TOP STRIP ===== */
+.top-strip {
+  background: #fc9df4; /* Light gold tint */
+  color: #8b5e3c; /* Dark gold/brown */
+  font-size: 14px;
+  padding: 6px 0;
+  text-align: center;
+  font-weight: 500;
+}
+
+/* ===== MAIN HEADER ===== */
+.header-main {
+  background: #ffffff;
+  border-bottom: 1px solid #eee;
+  z-index: 999;
+  padding: 10px 0;
+}
+
+/* Add shadow when sticky */
+.header-main.sticky-top {
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+/* ===== LOGO SECTION ===== */
+.logo-section {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.logo-image {
+  width: 150px;
+  height: auto;
+  object-fit: cover;
+  image-rendering: crisp-edges;
+  image-rendering: -webkit-optimize-contrast;
+}
+
+.logo-text .brand-name {
+  font-size: 24px;
+  font-weight: 800;
+  color: #bfa06f; /* Luxurious gold color */
+  margin: 0;
+}
+
+.logo-text .tagline {
+  font-size: 12px;
+  color: #777;
+  margin: 0;
+  font-style: italic;
+}
+
+/* ===== SEARCH BAR ===== */
+.search-bar {
+  display: flex;
+  align-items: center;
+  width: 45%;
+  border: 1px solid #ddd;
+  border-radius: 30px;
+  overflow: hidden;
+  background: #fff;
+  transition: all 0.3s ease;
+}
+
+.search-bar input {
+  flex: 1;
+  border: none;
+  padding: 10px 15px;
+  font-size: 14px;
+  outline: none;
+}
+
+.search-bar input:focus {
+  border-radius: 30px;
+  box-shadow: 0 0 10px rgba(191, 160, 111, 0.4); /* Goldish glow */
+}
+
+.search-bar button {
+  background: transparent;
+  border: none;
+  padding: 0 15px;
+  cursor: pointer;
+}
+
+.search-bar img {
+  width: 18px;
+  height: 18px;
+  opacity: 0.7;
+}
+
+/* ===== HEADER ACTIONS ===== */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+/* ===== USER DROPDOWN ===== */
+.user-dropdown {
+  background: none !important;
+  border: none !important;
+  color: #000 !important;
+  padding: 6px;
+}
+
+.user-dropdown::after {
+  display: none;
+}
+
+.dropdown-menu {
+  border-radius: 12px;
+  border: 1px solid #eee;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  background: #fffaf7;
+}
+
+.dropdown-item {
+  font-size: 14px;
+  padding: 10px 15px;
+  color: #333;
+}
+
+.dropdown-item:hover {
+  background: #f9f1e7; /* Soft hover */
+  color: #bfa06f; /* Gold highlight */
+}
+
+/* ===== CART BUTTON ===== */
+.cart-btn {
+  background: none;
+  border: none;
+  position: relative;
+  cursor: pointer;
+}
+
+.cart-btn svg {
+  color: #bfa06f;
+  transition: transform 0.2s ease;
+}
+
+.cart-btn:hover svg {
+  transform: scale(1.1);
+}
+
+/* Cart Count Badge */
+.cart-count {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  background: #bfa06f;
+  color: #fff;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 50%;
+  font-weight: bold;
+  border: 1px solid #fffaf7;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 992px) {
+  .search-bar {
+    width: 35%;
+  }
+
+  .logo-text {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .search-bar {
+    display: none;
+  }
+
+  .header-actions {
+    gap: 12px;
+  }
+}

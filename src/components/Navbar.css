@@ -1,0 +1,168 @@
+/* =========================
+   GLOBAL LUXURY VARIABLES
+========================= */
+:root {
+    --black: #0b0b0b;
+    --ivory: #faf8f5;
+    --gold: #b8a46a;
+    --soft-gold: #d6c28f;
+    --shadow: rgba(0, 0, 0, 0.18);
+  }
+  
+  /* =========================
+     HAMBURGER BUTTON
+  ========================= */
+  .hamburger {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    font-size: 26px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--black);
+    z-index: 3000;
+    transition: transform 0.15s ease;
+  }
+  
+  .hamburger:hover {
+    transform: scale(1.08);
+  }
+  
+  /* =========================
+     OVERLAY
+  ========================= */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(11, 11, 11, 0.35);
+    backdrop-filter: blur(2px);
+    z-index: 2000;
+  }
+  
+  /* =========================
+     SIDE MENU
+  ========================= */
+  .lux-menu {
+    position: fixed;
+    top: 0;
+    left: -280px;
+    width: 280px;
+    height: 100vh;
+    background: var(--ivory);
+    padding: 28px 22px;
+    z-index: 2500;
+    transition: left 0.22s ease;
+    box-shadow: 6px 0 30px var(--shadow);
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .lux-menu.open {
+    left: 0;
+  }
+  
+  /* =========================
+     HEADER
+  ========================= */
+  .lux-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 48px;
+  }
+  
+  .lux-header span {
+    font-size: 19px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--black);
+  }
+  
+  .lux-header button {
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    color: var(--black);
+    transition: color 0.2s ease;
+  }
+  
+  .lux-header button:hover {
+    color: var(--gold);
+  }
+  
+  /* =========================
+     NAV LINKS
+  ========================= */
+  .lux-menu nav {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+  
+  .lux-menu a {
+    text-decoration: none;
+    font-size: 19px;
+    font-weight: 500;
+    color: var(--black);
+    letter-spacing: 0.6px;
+    position: relative;
+    width: fit-content;
+    padding-bottom: 4px;
+  }
+  
+  /* GOLD UNDERLINE */
+  .lux-menu a::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 0%;
+    height: 1px;
+    background: var(--gold);
+    transition: width 0.25s ease;
+  }
+  
+  .lux-menu a:hover::after {
+    width: 100%;
+  }
+  
+  .lux-menu a:hover {
+    color: var(--gold);
+  }
+  
+  /* =========================
+     LOGOUT BUTTON
+  ========================= */
+  .logout {
+    margin-top: auto;
+    background: var(--black);
+    color: var(--ivory);
+    border: none;
+    padding: 12px;
+    font-size: 14px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: background 0.25s ease;
+  }
+  
+  .logout:hover {
+    background: var(--gold);
+    color: var(--black);
+  }
+  
+  /* =========================
+     RESPONSIVE
+  ========================= */
+  @media (min-width: 768px) {
+    .hamburger {
+      font-size: 28px;
+    }
+  
+    .lux-menu {
+      width: 300px;
+    }
+  }
+  

@@ -1,0 +1,221 @@
+/* 🌸 PAGE WRAPPER */
+.cart-page {
+  max-width: 1100px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: #fbe8f0;
+  border-radius: 20px;
+  box-shadow: 8px 8px 25px #e0c1d9, -8px -8px 25px #ffffff;
+}
+
+/* 🌸 HEADING */
+.cart-page h2 {
+  text-align: center;
+  font-size: 2.6rem;
+  margin-bottom: 2rem;
+  font-weight: 900;
+  background: linear-gradient(90deg, #f7a1c4, #fbc3d3, #ffd6e1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+/* Loading & Empty */
+.loading-text,
+.empty-text {
+  text-align: center;
+  font-size: 1.2rem;
+  color: #8b6a7c;
+}
+
+/* 🛒 ITEMS CONTAINER */
+.cart-items {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* 🌸 ITEM CARD */
+.cart-item {
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 1.2rem;
+  box-shadow: 6px 6px 16px #e0c1d9, -6px -6px 16px #ffffff;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.cart-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 10px 10px 22px #d8a8cc, -10px -10px 22px #ffffff;
+}
+
+/* 🖼 PRODUCT IMAGE */
+.cart-item img {
+  width: 110px;
+  height: 110px;
+  object-fit: cover;
+  border-radius: 14px;
+  margin-right: 1.4rem;
+}
+
+/* 🧾 DETAILS */
+.cart-item-details {
+  flex: 1;
+}
+
+.cart-item-details h4 {
+  margin: 0 0 0.4rem;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #4a2f3f;
+}
+
+.cart-item-details p {
+  margin: 0.2rem 0;
+  font-size: 1rem;
+  color: #6b4c5e;
+}
+
+/* ➕➖ QUANTITY CONTROLS */
+.cart-quantity {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 10px;
+  padding: 6px 12px;
+  background: #fde7f0;
+  border-radius: 12px;
+}
+
+.cart-quantity button {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, #fbb1c9, #f66fa3);
+  color: white;
+  font-size: 20px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 2px 2px 6px rgba(0,0,0,0.2);
+}
+
+.cart-quantity button:hover:not(:disabled) {
+  transform: scale(1.1);
+}
+
+.cart-quantity button:disabled {
+  background: #e5e7eb;
+  color: #9ca3af;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.cart-quantity span {
+  min-width: 32px;
+  text-align: center;
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: #4a2f3f;
+}
+
+/* ❌ REMOVE BUTTON */
+.remove-btn {
+  display: inline-block;
+  margin-top: 12px;
+  background: transparent;
+  color: #dc2626;
+  border: none;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.remove-btn:hover {
+  color: #991b1b;
+  transform: translateX(2px);
+  text-decoration: underline;
+}
+
+/* 🚫 OUT OF STOCK */
+.out-stock {
+  margin-top: 6px;
+  color: #dc2626;
+  font-weight: 800;
+}
+
+/* 🧾 SUMMARY */
+.cart-summary {
+  margin-top: 2.5rem;
+  padding: 1.8rem;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #f7c4d9, #f5a6c5, #f9d2e5);
+  color: #4a2f3f;
+  box-shadow: 8px 8px 22px rgba(0,0,0,0.15);
+}
+
+.cart-summary h3 {
+  text-align: center;
+  font-size: 1.9rem;
+  font-weight: 900;
+  margin-bottom: 1.2rem;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 1.1rem;
+  margin: 0.5rem 0;
+}
+
+.summary-row.total {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 2px solid rgba(255,255,255,0.6);
+  font-size: 1.3rem;
+  font-weight: 900;
+}
+
+/* 🌸 CHECKOUT BUTTON */
+.checkout-button {
+  width: 100%;
+  margin-top: 1.6rem;
+  padding: 16px;
+  border-radius: 18px;
+  border: none;
+  background: linear-gradient(135deg, #f66fa3, #e8558f);
+  color: white;
+  font-size: 1.25rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 4px 4px 14px rgba(0,0,0,0.25);
+}
+
+.checkout-button:hover {
+  transform: scale(1.05);
+}
+
+/* 📱 RESPONSIVE */
+@media (max-width: 768px) {
+  .cart-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .cart-item img {
+    margin-bottom: 12px;
+  }
+
+  .cart-quantity {
+    margin-top: 8px;
+  }
+}
