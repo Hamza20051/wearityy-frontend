@@ -19,7 +19,7 @@ const ProductDetail = () => {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/products/${id}`);
+        const res = await axios.get(`${BACKEND_URL}/api/products/${id}`);
         const p = res.data;
         setProduct(p);
         setMainImage(p.images?.[0] || p.image);
