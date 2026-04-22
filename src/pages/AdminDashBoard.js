@@ -34,17 +34,28 @@ const AdminDashBoard = () => {
 
   const [newProduct, setNewProduct] = useState(emptyProduct);
 
-  /* ✅ FETCH PRODUCTS */
+  /* =========================
+     FETCH PRODUCTS (SAFE)
+  ========================= */
   useEffect(() => {
     fetchProducts();
   }, []);
 
   const fetchProducts = async () => {
-    const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/products`);
-    setProducts(res.data);
+    try {
+      const res = await axios.get(
+        `${process.env.REACT_APP_BACKEND_URL}/api/products`
+      );
+      setProducts(res.data);
+    } catch (error) {
+      console.error("Failed to fetch products:", error);
+      alert("Error loading products");
+    }
   };
 
-  /* ✅ ADMIN PROTECTION */
+  /* =========================
+     ADMIN PROTECTION
+  ========================= */
   if (!user || !user.isAdmin) {
     return <Navigate to="/login" replace />;
   }
@@ -54,7 +65,9 @@ const AdminDashBoard = () => {
     setNewProduct(prev => ({ ...prev, [name]: value }));
   };
 
-  /* 🤖 AI DESCRIPTION */
+  /* =========================
+     AI DESCRIPTION
+  ========================= */
   const generateAIDescription = async () => {
     if (!newProduct.name || !newProduct.category) {
       return alert('Enter product name & category');
@@ -63,6 +76,7 @@ const AdminDashBoard = () => {
     try {
       setLoadingAI(true);
       const token = localStorage.getItem('token');
+      if (!token) return alert("Login required");
 
       const res = await axios.post(
         `${process.env.REACT_APP_BACKEND_URL}/api/ai/generate-description`,
@@ -84,62 +98,89 @@ const AdminDashBoard = () => {
     }
   };
 
+  /* =========================
+     ADD PRODUCT
+  ========================= */
   const addProduct = async () => {
     const token = localStorage.getItem('token');
-  
-    await axios.post(
-      `${process.env.REACT_APP_BACKEND_URL}/api/products`,
-      {
-        ...newProduct,
-        price: Number(newProduct.price),
-        oldPrice: Number(newProduct.oldPrice),
-        stock: Number(newProduct.stock),
-      },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-  
-    alert('Product added');
-    setNewProduct(emptyProduct);
-    fetchProducts();
+    if (!token) return alert("Login required");
+
+    try {
+      await axios.post(
+        `${process.env.REACT_APP_BACKEND_URL}/api/products`,
+        {
+          ...newProduct,
+          price: Number(newProduct.price),
+          oldPrice: Number(newProduct.oldPrice),
+          stock: Number(newProduct.stock),
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      alert('Product added');
+      setNewProduct(emptyProduct);
+      fetchProducts();
+    } catch (err) {
+      console.error(err);
+      alert("Add failed");
+    }
   };
 
-  /* ✏️ UPDATE PRODUCT */
+  /* =========================
+     UPDATE PRODUCT
+  ========================= */
   const updateProduct = async () => {
     const token = localStorage.getItem('token');
-  
-    await axios.put(
-      `${process.env.REACT_APP_BACKEND_URL}/api/products/${newProduct._id}`,
-      {
-        ...newProduct,
-        price: Number(newProduct.price),
-        oldPrice: Number(newProduct.oldPrice),
-        stock: Number(newProduct.stock),
-      },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-  
-    alert('Product updated');
-    setIsEditing(false);
-    setNewProduct(emptyProduct);
-    fetchProducts();
+    if (!token) return alert("Login required");
+
+    try {
+      await axios.put(
+        `${process.env.REACT_APP_BACKEND_URL}/api/products/${newProduct._id}`,
+        {
+          ...newProduct,
+          price: Number(newProduct.price),
+          oldPrice: Number(newProduct.oldPrice),
+          stock: Number(newProduct.stock),
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      alert('Product updated');
+      setIsEditing(false);
+      setNewProduct(emptyProduct);
+      fetchProducts();
+    } catch (err) {
+      console.error(err);
+      alert("Update failed");
+    }
   };
 
-  /* 🗑 DELETE PRODUCT */
+  /* =========================
+     DELETE PRODUCT
+  ========================= */
   const deleteProduct = async (id) => {
     if (!window.confirm('Delete this product permanently?')) return;
 
     const token = localStorage.getItem('token');
+    if (!token) return alert("Login required");
 
-    await axios.delete(
-      `${process.env.REACT_APP_BACKEND_URL}/api/products/${id}`,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+    try {
+      await axios.delete(
+        `${process.env.REACT_APP_BACKEND_URL}/api/products/${id}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
-    alert('Product deleted');
-    fetchProducts();
+      alert('Product deleted');
+      fetchProducts();
+    } catch (err) {
+      console.error(err);
+      alert("Delete failed");
+    }
   };
 
-  /* ✏️ LOAD PRODUCT */
+  /* =========================
+     EDIT PRODUCT
+  ========================= */
   const editProduct = (product) => {
     setIsEditing(true);
     setNewProduct({
@@ -159,17 +200,18 @@ const AdminDashBoard = () => {
         {isEditing ? 'Edit Product' : 'Add New Product'}
       </h4>
 
+      {/* INPUTS */}
       <input name="name" placeholder="Product Name" value={newProduct.name} onChange={handleInputChange} style={styles.input} />
 
-      <input placeholder="Materials" value={newProduct.materials.join(',')} onChange={e =>
+      <input placeholder="Materials" value={(newProduct.materials || []).join(',')} onChange={e =>
         setNewProduct(p => ({ ...p, materials: e.target.value.split(',').map(v => v.trim()) }))
       } style={styles.input} />
 
-      <input placeholder="Colors" value={newProduct.colors.join(',')} onChange={e =>
+      <input placeholder="Colors" value={(newProduct.colors || []).join(',')} onChange={e =>
         setNewProduct(p => ({ ...p, colors: e.target.value.split(',').map(v => v.trim()) }))
       } style={styles.input} />
 
-      <input placeholder="Carats" value={newProduct.carats.join(',')} onChange={e =>
+      <input placeholder="Carats" value={(newProduct.carats || []).join(',')} onChange={e =>
         setNewProduct(p => ({ ...p, carats: e.target.value.split(',').map(v => v.trim()) }))
       } style={styles.input} />
 
@@ -203,9 +245,11 @@ const AdminDashBoard = () => {
       <hr />
 
       <h3>Existing Products</h3>
+
       {products.map(p => (
         <div key={p._id} style={styles.productRow}>
           <b>{p.name}</b> — ${p.price}
+
           <div>
             <button onClick={() => editProduct(p)}>✏️</button>
             <button onClick={() => deleteProduct(p._id)} style={{ marginLeft: 8 }}>🗑</button>
