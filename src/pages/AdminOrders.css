@@ -76,7 +76,24 @@ input[type="checkbox"] {
   accent-color: #c9a14a;
   cursor: pointer;
 }
+.status {
+  padding: 5px 10px;
+  border-radius: 15px;
+  color: white;
+  font-weight: bold;
+}
 
+.status.Pending {
+  background: orange;
+}
+
+.status.Confirmed {
+  background: green;
+}
+
+.status.Delivered {
+  background: blue;
+}
 /* ===============================
    BUTTONS
 ================================ */
