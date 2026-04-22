@@ -7,11 +7,16 @@ const Login = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
+  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  /* =========================
+     LOGIN HANDLER
+  ========================= */
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
@@ -19,31 +24,49 @@ const Login = () => {
 
     try {
       const res = await axios.post(
-        `${process.env.REACT_APP_BACKEND_URL}/api/auth/login`,
+        `${BACKEND_URL}/api/auth/login`,
         { email, password }
       );
+
       const { token, user } = res.data;
 
-      // Save token and user in localStorage
+      if (!token || !user) {
+        throw new Error('Invalid server response');
+      }
+
+      // Save auth data
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
 
-      // Update Redux store
-      dispatch({ type: 'LOGIN', payload: { user, token } });
+      // Redux update
+      dispatch({
+        type: 'LOGIN',
+        payload: { user, token }
+      });
 
-      console.log('Logged in user:', user);
-      navigate('/'); // redirect to home
+      navigate('/');
+
     } catch (err) {
       console.error('Login error:', err);
-      setError(err.response?.data?.message || 'Invalid email or password');
+
+      setError(
+        err.response?.data?.message ||
+        err.message ||
+        'Invalid email or password'
+      );
+
     } finally {
       setLoading(false);
     }
   };
 
+  /* =========================
+     UI
+  ========================= */
   return (
     <div className="auth-page">
       <div className="auth-container">
+
         <h2>Welcome Back 💖</h2>
         <p className="auth-subtitle">Login to continue shopping</p>
 
@@ -74,6 +97,7 @@ const Login = () => {
         <p className="auth-footer">
           Don’t have an account? <Link to="/signup">Register</Link>
         </p>
+
       </div>
     </div>
   );
