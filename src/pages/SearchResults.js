@@ -5,7 +5,10 @@ const SearchResults = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
   const location = useLocation();
+
+  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
   const queryParams = new URLSearchParams(location.search);
   const searchQuery = queryParams.get("query") || "";
@@ -21,12 +24,20 @@ const SearchResults = () => {
       setError("");
 
       try {
-        const res = await fetch(`/api/products?search=${encodeURIComponent(searchQuery)}`);
+        const res = await fetch(
+          `${BACKEND_URL}/api/products?search=${encodeURIComponent(searchQuery)}`
+        );
+
         if (!res.ok) throw new Error("Failed to fetch products");
+
         const data = await res.json();
 
-        if (data.length === 0) setError("No products found.");
-        setProducts(data);
+        if (!data || data.length === 0) {
+          setError("No products found.");
+        }
+
+        setProducts(data || []);
+
       } catch (err) {
         console.error(err);
         setError("Error fetching products.");
@@ -37,7 +48,7 @@ const SearchResults = () => {
     };
 
     fetchProducts();
-  }, [searchQuery]);
+  }, [searchQuery, BACKEND_URL]);
 
   return (
     <div className="container mt-4">
