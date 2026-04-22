@@ -8,25 +8,30 @@ const Cart = () => {
   const [loading, setLoading] = useState(true);
   const qtyTimer = useRef(null);
 
-  // 🔄 Fetch Cart
+  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+
+  /* =========================
+     FETCH CART
+  ========================= */
   useEffect(() => {
     const fetchCart = async () => {
       const user = JSON.parse(localStorage.getItem('user'));
-      if (!user) {
+
+      if (!user?.id) {
         setLoading(false);
         return;
       }
 
       try {
         const res = await axios.get(
-          `${process.env.REACT_APP_BACKEND_URL}/api/cart/${user.id}`
+          `${BACKEND_URL}/api/cart/${user.id}`
         );
 
         const products = res.data.products || [];
 
         setCartItems(products);
 
-        // ✅ SYNC WITH LOCAL STORAGE (HEADER COUNT FIX)
+        // sync local storage
         localStorage.setItem("cart", JSON.stringify(products));
 
       } catch (err) {
@@ -37,9 +42,11 @@ const Cart = () => {
     };
 
     fetchCart();
-  }, []);
+  }, [BACKEND_URL]);
 
-  // ⚡ FAST Quantity Update (Optimistic UI + Debounce)
+  /* =========================
+     UPDATE QUANTITY (DEBOUNCED)
+  ========================= */
   const handleUpdateQty = (productId, newQty, stock) => {
     if (newQty < 1 || newQty > stock) return;
 
@@ -50,21 +57,19 @@ const Cart = () => {
           : item
       );
 
-      // ✅ KEEP LOCAL STORAGE UPDATED
       localStorage.setItem("cart", JSON.stringify(updated));
-
       return updated;
     });
 
-    // ⏳ Debounced backend sync
     clearTimeout(qtyTimer.current);
+
     qtyTimer.current = setTimeout(async () => {
       const user = JSON.parse(localStorage.getItem('user'));
-      if (!user) return;
+      if (!user?.id) return;
 
       try {
         await axios.post(
-          `${process.env.REACT_APP_BACKEND_URL}/api/cart/${user.id}`,
+          `${BACKEND_URL}/api/cart/${user.id}`,
           {
             productId,
             quantity: newQty,
@@ -76,21 +81,21 @@ const Cart = () => {
     }, 400);
   };
 
-  // ❌ Remove Item
+  /* =========================
+     REMOVE ITEM
+  ========================= */
   const handleRemove = async (productId) => {
     const user = JSON.parse(localStorage.getItem('user'));
-    if (!user) return;
+    if (!user?.id) return;
 
     try {
       const res = await axios.delete(
-         `${process.env.REACT_APP_BACKEND_URL}/api/cart/${user.id}/${productId}`
+        `${BACKEND_URL}/api/cart/${user.id}/${productId}`
       );
 
       const products = res.data.products || [];
 
       setCartItems(products);
-
-      // ✅ SYNC AFTER REMOVE
       localStorage.setItem("cart", JSON.stringify(products));
 
     } catch (err) {
@@ -98,14 +103,18 @@ const Cart = () => {
     }
   };
 
-  // 🧹 CLEAR LOCAL STORAGE WHEN CART EMPTY
+  /* =========================
+     CLEAR STORAGE IF EMPTY
+  ========================= */
   useEffect(() => {
     if (cartItems.length === 0) {
       localStorage.setItem("cart", JSON.stringify([]));
     }
   }, [cartItems]);
 
-  // 💰 Totals
+  /* =========================
+     TOTALS
+  ========================= */
   const subtotal = cartItems.reduce(
     (sum, item) => sum + item.product.price * item.quantity,
     0
@@ -114,6 +123,9 @@ const Cart = () => {
   const shipping = cartItems.length > 0 ? 5.99 : 0;
   const total = subtotal + shipping;
 
+  /* =========================
+     UI
+  ========================= */
   return (
     <div className="cart-page">
       <h2>Your Cart</h2>
@@ -124,20 +136,16 @@ const Cart = () => {
         <p className="empty-text">Your cart is empty.</p>
       ) : (
         <>
-          {/* 🛒 CART ITEMS */}
           <div className="cart-items">
             {cartItems.map((item) => (
               <div key={item.product._id} className="cart-item">
-                <img
-                  src={item.product.image}
-                  alt={item.product.name}
-                />
+
+                <img src={item.product.image} alt={item.product.name} />
 
                 <div className="cart-item-details">
                   <h4>{item.product.name}</h4>
                   <p>Price: ${item.product.price}</p>
 
-                  {/* ➕➖ Quantity */}
                   <div className="cart-quantity">
                     <button
                       onClick={() =>
@@ -168,28 +176,22 @@ const Cart = () => {
                     </button>
                   </div>
 
-                  {/* ❌ Remove */}
                   <button
                     className="remove-btn"
-                    onClick={() =>
-                      handleRemove(item.product._id)
-                    }
+                    onClick={() => handleRemove(item.product._id)}
                   >
                     Remove
                   </button>
 
-                  {/* 🚫 Stock Warning */}
                   {item.product.stock === 0 && (
-                    <p className="out-stock">
-                      Out of stock
-                    </p>
+                    <p className="out-stock">Out of stock</p>
                   )}
                 </div>
+
               </div>
             ))}
           </div>
 
-          {/* 🧾 SUMMARY */}
           <div className="cart-summary">
             <h3>Cart Summary</h3>
 
