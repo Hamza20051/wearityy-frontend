@@ -7,30 +7,50 @@ const AdminUsers = () => {
 
   const user = JSON.parse(localStorage.getItem('user'));
 
-  // ✅ Memoized function
+  /* =========================
+     SAFETY CHECK
+  ========================= */
+  const token = user?.token;
+
+  /* =========================
+     FETCH USERS
+  ========================= */
   const fetchUsers = useCallback(async () => {
+    if (!token) {
+      setLoading(false);
+      alert("Unauthorized access");
+      return;
+    }
+
     try {
       const res = await axios.get(
         `${process.env.REACT_APP_BACKEND_URL}/api/admin/users`,
         {
           headers: {
-            Authorization: `Bearer ${user.token}`,
+            Authorization: `Bearer ${token}`,
           },
         }
       );
+
       setUsers(res.data);
     } catch (error) {
       console.error('Failed to fetch users', error);
+      alert("Failed to load users");
     } finally {
       setLoading(false);
     }
-  }, [user.token]);
+  }, [token]);
 
-  // ✅ Safe useEffect
+  /* =========================
+     USE EFFECT
+  ========================= */
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
 
+  /* =========================
+     LOADING
+  ========================= */
   if (loading) {
     return <p className="text-center mt-5">Loading users...</p>;
   }
@@ -53,31 +73,36 @@ const AdminUsers = () => {
             <tr key={u._id}>
               <td>{u.name}</td>
               <td>{u.email}</td>
+
               <td>
                 <button
-                 className={`btn btn-sm ${
-                     u.isAdmin ? 'btn-danger' : 'btn-success'
-                 }`}
-                 onClick={async () => {
+                  className={`btn btn-sm ${
+                    u.isAdmin ? 'btn-danger' : 'btn-success'
+                  }`}
+                  onClick={async () => {
+                    if (!token) return alert("Login required");
+
                     try {
-                     await axios.put(
-                         `${process.env.REACT_APP_BACKEND_URL}/api/admin/toggle-admin/${u._id}`,
-                         {},
-                         {
+                      await axios.put(
+                        `${process.env.REACT_APP_BACKEND_URL}/api/admin/toggle-admin/${u._id}`,
+                        {},
+                        {
                           headers: {
-                             Authorization: `Bearer ${user.token}`,
-                             },
-                         }
-                     );
-                     fetchUsers(); // refresh list
+                            Authorization: `Bearer ${token}`,
+                          },
+                        }
+                      );
+
+                      fetchUsers(); // refresh
                     } catch (err) {
-                     alert('Action not allowed');
-                     }
-                     }}
-                    >
-                     {u.isAdmin ? 'Remove Admin' : 'Make Admin'}
-                     </button>
-                </td>
+                      console.error(err);
+                      alert('Action not allowed');
+                    }
+                  }}
+                >
+                  {u.isAdmin ? 'Remove Admin' : 'Make Admin'}
+                </button>
+              </td>
 
             </tr>
           ))}
