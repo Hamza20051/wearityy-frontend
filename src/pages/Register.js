@@ -5,41 +5,64 @@ import { useNavigate, Link } from 'react-router-dom';
 const Register = () => {
   const navigate = useNavigate();
 
+  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleRegister = async (e) => {
     e.preventDefault();
+    setError('');
+    setLoading(true);
 
     if (password !== confirmPassword) {
+      setLoading(false);
       return setError('Passwords do not match');
     }
 
     try {
-      const res = await axios.post('/api/auth/register', {
-        name,
-        email,
-        password,
-      });
+      const res = await axios.post(
+        `${BACKEND_URL}/api/auth/register`,
+        {
+          name,
+          email,
+          password,
+        }
+      );
 
       const { token, user } = res.data;
+
+      if (!token || !user) {
+        throw new Error('Invalid server response');
+      }
+
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
 
       navigate('/');
+
     } catch (err) {
-      setError(err.response?.data?.message || 'Something went wrong');
+      console.error(err);
+      setError(
+        err.response?.data?.message ||
+        err.message ||
+        'Something went wrong'
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="auth-page">
       <div className="auth-container">
-        <h2>Create Account </h2>
+
+        <h2>Create Account ✨</h2>
         <p className="auth-subtitle">Join our beauty community</p>
 
         <form onSubmit={handleRegister}>
@@ -90,12 +113,15 @@ const Register = () => {
 
           {error && <p className="auth-error">{error}</p>}
 
-          <button type="submit">Register</button>
+          <button type="submit" disabled={loading}>
+            {loading ? 'Creating account...' : 'Register'}
+          </button>
         </form>
 
         <p className="auth-footer">
           Already have an account? <Link to="/login">Login</Link>
         </p>
+
       </div>
     </div>
   );
