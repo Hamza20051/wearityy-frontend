@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Navigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import './AdminOrders.css';
 
 const AdminOrders = () => {
   const user = useSelector((state) => state.auth.user);
@@ -10,32 +11,66 @@ const AdminOrders = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
 
-  // ✅ Always call hooks, never conditionally
+  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+  const WHATSAPP = "923460051459";
+
+  /* =========================
+     FETCH ORDERS
+  ========================= */
   useEffect(() => {
-    const fetchOrders = async () => {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setError('You must be logged in as admin to view orders.');
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/orders`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setOrders(res.data);
-      } catch (err) {
-        setError(err.response?.data?.message || 'Failed to fetch orders.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchOrders();
   }, []);
 
-  // ✅ Redirect handled after hooks
+  const fetchOrders = async () => {
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      setError('Login required');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const res = await axios.get(`${BACKEND_URL}/api/orders`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setOrders(res.data);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to fetch orders');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /* =========================
+     UPDATE STATUS
+  ========================= */
+  const updateStatus = async (id, status) => {
+    const token = localStorage.getItem('token');
+
+    try {
+      await axios.put(
+        `${BACKEND_URL}/api/orders/status/${id}`,
+        { status },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      alert(`Order marked as ${status}`);
+
+      // refresh
+      fetchOrders();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update status");
+    }
+  };
+
+  /* =========================
+     ADMIN PROTECTION
+  ========================= */
   if (!user || !user.isAdmin) {
     return <Navigate to="/login" replace />;
   }
@@ -56,24 +91,77 @@ const AdminOrders = () => {
   return (
     <div className="container mt-4">
       <h2>All Orders</h2>
+
       {orders.length === 0 ? (
         <p>No orders yet.</p>
       ) : (
         orders.map((order) => (
           <div key={order._id} className="card mb-3 p-3">
+
             <h5>Order ID: {order._id}</h5>
+
             <p><b>Name:</b> {order.shippingInfo.name}</p>
             <p><b>Email:</b> {order.shippingInfo.email}</p>
             <p><b>Phone:</b> {order.shippingInfo.phone}</p>
-            <p><b>Address:</b> {order.shippingInfo.address}, {order.shippingInfo.city} - {order.shippingInfo.postalCode}</p>
+            <p>
+              <b>Address:</b>{" "}
+              {order.shippingInfo.address}, {order.shippingInfo.city} - {order.shippingInfo.postalCode}
+            </p>
+
             <p><b>Payment Method:</b> {order.paymentMethod}</p>
             <p><b>Total:</b> ${order.totalPrice}</p>
+
+            {/* STATUS BADGE */}
+            <p>
+              <b>Status:</b>{" "}
+              <span className={`status ${order.status || "Pending"}`}>
+                {order.status || "Pending"}
+              </span>
+            </p>
+
+            {/* PRODUCTS */}
             <h6>Products:</h6>
             <ul>
-              {order.products.map((p) => (
-                <li key={p._id}>{p.product?.name || 'Unknown'} - Quantity: {p.quantity}</li>
+              {order.products.map((p, i) => (
+                <li key={i}>
+                  {p.product?.name || 'Unknown'} - Qty: {p.quantity}
+                </li>
               ))}
             </ul>
+
+            {/* ADMIN ACTIONS */}
+            <div style={{ marginTop: "10px" }}>
+
+              <button onClick={() => updateStatus(order._id, "Confirmed")}>
+                Confirm
+              </button>
+
+              <button
+                onClick={() => updateStatus(order._id, "Delivered")}
+                style={{ marginLeft: "10px" }}
+              >
+                Delivered
+              </button>
+
+              {/* WHATSAPP BUTTON */}
+              <a
+                href={`https://wa.me/${WHATSAPP}?text=Your%20order%20${order._id}%20status%20is%20${order.status}`}
+                target="_blank"
+                rel="noreferrer"
+                style={{
+                  marginLeft: "10px",
+                  background: "green",
+                  color: "white",
+                  padding: "6px 10px",
+                  borderRadius: "5px",
+                  textDecoration: "none"
+                }}
+              >
+                WhatsApp Update
+              </a>
+
+            </div>
+
           </div>
         ))
       )}
