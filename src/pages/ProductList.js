@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import ProductCard from '../components/ProductCard';
-// At the top of ProductDetail.js or ProductList.js
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+
 const ProductList = () => {
   const [products, setProducts] = useState([]);
   const [sort, setSort] = useState('');
@@ -12,28 +11,49 @@ const ProductList = () => {
   const [ratingFilter, setRatingFilter] = useState('');
   const [search, setSearch] = useState('');
 
+  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        let query = '?';
-        if (sort) query += `sort=${sort}&`;
-        if (categoryFilter) query += `category=${categoryFilter}&`;
-        if (priceMin) query += `priceMin=${priceMin}&`;
-        if (priceMax) query += `priceMax=${priceMax}&`;
-        if (ratingFilter) query += `rating=${ratingFilter}&`;
-        if (search) query += `search=${search}&`;
+        let query = '';
 
-        const response = await axios.get(`${BACKEND_URL}/api/products${query}`);
+        const params = [];
+
+        if (sort) params.push(`sort=${sort}`);
+        if (categoryFilter) params.push(`category=${categoryFilter}`);
+        if (priceMin) params.push(`priceMin=${priceMin}`);
+        if (priceMax) params.push(`priceMax=${priceMax}`);
+        if (ratingFilter) params.push(`rating=${ratingFilter}`);
+        if (search) params.push(`search=${search}`);
+
+        if (params.length > 0) {
+          query = `?${params.join('&')}`;
+        }
+
+        const response = await axios.get(
+          `${BACKEND_URL}/api/products${query}`
+        );
+
         setProducts(response.data);
+
       } catch (error) {
         console.error('Error fetching products:', error);
       }
     };
+
     fetchProducts();
-  }, [sort, categoryFilter, priceMin, priceMax, ratingFilter, search]);
+  }, [
+    sort,
+    categoryFilter,
+    priceMin,
+    priceMax,
+    ratingFilter,
+    search,
+    BACKEND_URL
+  ]);
 
   const categories = [
-    
     'Nails',
     'Bands',
     'Rings',
@@ -44,13 +64,14 @@ const ProductList = () => {
 
   return (
     <div className="product-list-page">
-      <h1>Our  Collection ✨</h1>
+
+      <h1>Our Collection ✨</h1>
 
       {/* Search */}
       <div className="search-bar">
-        <input 
-          type="text" 
-          placeholder="Search products..." 
+        <input
+          type="text"
+          placeholder="Search products..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -58,6 +79,7 @@ const ProductList = () => {
 
       {/* Filters */}
       <div className="filters">
+
         <select value={sort} onChange={(e) => setSort(e.target.value)}>
           <option value="">Sort by</option>
           <option value="price-asc">Price: Low → High</option>
@@ -68,31 +90,40 @@ const ProductList = () => {
 
         <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
           <option value="">All Categories</option>
-          {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+          {categories.map(cat => (
+            <option key={cat} value={cat}>{cat}</option>
+          ))}
         </select>
 
-        
+        <button
+          className="clear-filters"
+          onClick={() => {
+            setSort('');
+            setCategoryFilter('');
+            setPriceMin('');
+            setPriceMax('');
+            setRatingFilter('');
+            setSearch('');
+          }}
+        >
+          Clear Filters
+        </button>
 
-       
-
-        <button className="clear-filters" onClick={() => {
-          setSort('');
-          setCategoryFilter('');
-          setPriceMin('');
-          setPriceMax('');
-          setRatingFilter('');
-          setSearch('');
-        }}>Clear Filters</button>
       </div>
 
-      {/* Product Grid */}
+      {/* Products */}
       <div className="product-grid">
+
         {products.length === 0 ? (
           <p>No products found.</p>
         ) : (
-          products.map((product) => <ProductCard key={product._id} product={product} />)
+          products.map((product) => (
+            <ProductCard key={product._id} product={product} />
+          ))
         )}
+
       </div>
+
     </div>
   );
 };
