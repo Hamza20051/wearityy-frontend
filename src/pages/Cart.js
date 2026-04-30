@@ -3,35 +3,42 @@ import axios from 'axios';
 import { Link } from 'react-router-dom';
 import './Cart.css';
 
+// 🔥 FIX: hard backend URL (no env issues)
+const BACKEND_URL = "https://ecommerce-backend-tc68.onrender.com";
+
 const Cart = () => {
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const qtyTimer = useRef(null);
 
-  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+  /* =========================
+     GUEST ID SYSTEM
+  ========================= */
+  const getGuestId = () => {
+    let guestId = localStorage.getItem("guestId");
+    if (!guestId) {
+      guestId = crypto.randomUUID();
+      localStorage.setItem("guestId", guestId);
+    }
+    return guestId;
+  };
 
   /* =========================
      FETCH CART
   ========================= */
   useEffect(() => {
     const fetchCart = async () => {
-      const user = JSON.parse(localStorage.getItem('user'));
-
-      if (!user?.id) {
-        setLoading(false);
-        return;
-      }
-
       try {
+        const guestId = getGuestId();
+
         const res = await axios.get(
-          `${BACKEND_URL}/api/cart/${user.id}`
+          `${BACKEND_URL}/api/cart/${guestId}`
         );
 
         const products = res.data.products || [];
 
         setCartItems(products);
 
-        // sync local storage
         localStorage.setItem("cart", JSON.stringify(products));
 
       } catch (err) {
@@ -42,10 +49,10 @@ const Cart = () => {
     };
 
     fetchCart();
-  }, [BACKEND_URL]);
+  }, []);
 
   /* =========================
-     UPDATE QUANTITY (DEBOUNCED)
+     UPDATE QUANTITY
   ========================= */
   const handleUpdateQty = (productId, newQty, stock) => {
     if (newQty < 1 || newQty > stock) return;
@@ -64,12 +71,11 @@ const Cart = () => {
     clearTimeout(qtyTimer.current);
 
     qtyTimer.current = setTimeout(async () => {
-      const user = JSON.parse(localStorage.getItem('user'));
-      if (!user?.id) return;
-
       try {
+        const guestId = getGuestId();
+
         await axios.post(
-          `${BACKEND_URL}/api/cart/${user.id}`,
+          `${BACKEND_URL}/api/cart/${guestId}`,
           {
             productId,
             quantity: newQty,
@@ -85,12 +91,11 @@ const Cart = () => {
      REMOVE ITEM
   ========================= */
   const handleRemove = async (productId) => {
-    const user = JSON.parse(localStorage.getItem('user'));
-    if (!user?.id) return;
-
     try {
+      const guestId = getGuestId();
+
       const res = await axios.delete(
-        `${BACKEND_URL}/api/cart/${user.id}/${productId}`
+        `${BACKEND_URL}/api/cart/${guestId}/${productId}`
       );
 
       const products = res.data.products || [];
@@ -102,15 +107,6 @@ const Cart = () => {
       console.error('Failed to remove item', err);
     }
   };
-
-  /* =========================
-     CLEAR STORAGE IF EMPTY
-  ========================= */
-  useEffect(() => {
-    if (cartItems.length === 0) {
-      localStorage.setItem("cart", JSON.stringify([]));
-    }
-  }, [cartItems]);
 
   /* =========================
      TOTALS
@@ -137,6 +133,7 @@ const Cart = () => {
       ) : (
         <>
           <div className="cart-items">
+
             {cartItems.map((item) => (
               <div key={item.product._id} className="cart-item">
 
@@ -190,6 +187,7 @@ const Cart = () => {
 
               </div>
             ))}
+
           </div>
 
           <div className="cart-summary">
@@ -215,6 +213,7 @@ const Cart = () => {
                 Proceed to Checkout
               </button>
             </Link>
+
           </div>
         </>
       )}
