@@ -8,7 +8,8 @@ const SearchResults = () => {
 
   const location = useLocation();
 
-  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+  // 🔥 Hard backend URL (avoids env issues)
+  const BACKEND_URL = "https://ecommerce-backend-tc68.onrender.com";
 
   const queryParams = new URLSearchParams(location.search);
   const searchQuery = queryParams.get("query") || "";
@@ -32,11 +33,11 @@ const SearchResults = () => {
 
         const data = await res.json();
 
+        setProducts(data || []);
+
         if (!data || data.length === 0) {
           setError("No products found.");
         }
-
-        setProducts(data || []);
 
       } catch (err) {
         console.error(err);
@@ -48,11 +49,12 @@ const SearchResults = () => {
     };
 
     fetchProducts();
-  }, [searchQuery, BACKEND_URL]);
+  }, [searchQuery]);
 
   return (
     <div className="container mt-4">
-      <h2>Search Results for: "{searchQuery}"</h2>
+
+      <h2>Search Results: "{searchQuery}"</h2>
 
       {loading && <p>Loading...</p>}
       {error && <p>{error}</p>}
@@ -62,20 +64,24 @@ const SearchResults = () => {
           {products.map((product) => (
             <div className="col-md-3" key={product._id}>
               <div className="card mb-4">
+
                 <img
                   src={product.image}
                   alt={product.name}
                   className="card-img-top"
                 />
+
                 <div className="card-body">
                   <h5>{product.name}</h5>
                   <p>${product.price}</p>
                 </div>
+
               </div>
             </div>
           ))}
         </div>
       )}
+
     </div>
   );
 };
