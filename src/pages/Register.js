@@ -7,6 +7,9 @@ const Register = () => {
 
   const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
+  // 🔍 DEBUG LOG 1: Check env variable
+  console.log("BACKEND_URL =", BACKEND_URL);
+
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -17,37 +20,57 @@ const Register = () => {
 
   const handleRegister = async (e) => {
     e.preventDefault();
+
+    // 🔍 DEBUG LOG 2: Button click check
+    console.log("REGISTER BUTTON CLICKED");
+
     setError('');
     setLoading(true);
 
     if (password !== confirmPassword) {
+      console.log("PASSWORD MISMATCH");
       setLoading(false);
       return setError('Passwords do not match');
     }
 
+    // 🔍 DEBUG LOG 3: Data being sent
+    console.log("FORM DATA:", {
+      name,
+      email,
+      password,
+    });
+
+    const url = `${BACKEND_URL}/api/auth/register`;
+
+    // 🔍 DEBUG LOG 4: Final API URL
+    console.log("REQUEST URL:", url);
+
     try {
-      const res = await axios.post(
-        `${BACKEND_URL}/api/auth/register`,
-        {
-          name,
-          email,
-          password,
-        }
-      );
+      const res = await axios.post(url, {
+        name,
+        email,
+        password,
+      });
+
+      // 🔍 DEBUG LOG 5: Response check
+      console.log("RESPONSE:", res.data);
 
       const { token, user } = res.data;
 
       if (!token || !user) {
+        console.log("INVALID RESPONSE FORMAT");
         throw new Error('Invalid server response');
       }
 
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
 
+      console.log("REGISTER SUCCESS");
       navigate('/');
 
     } catch (err) {
-      console.error(err);
+      console.log("REGISTER ERROR:", err);
+
       setError(
         err.response?.data?.message ||
         err.message ||
@@ -107,10 +130,6 @@ const Register = () => {
             Show password
           </label>
 
-          <p className="password-hint">
-            Password should be at least 6 characters
-          </p>
-
           {error && <p className="auth-error">{error}</p>}
 
           <button type="submit" disabled={loading}>
@@ -125,7 +144,6 @@ const Register = () => {
       </div>
     </div>
   );
-
 };
-console.log("BACKEND URL:", process.env.REACT_APP_BACKEND_URL);
+
 export default Register;
