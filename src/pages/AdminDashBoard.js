@@ -11,6 +11,9 @@ const AdminDashBoard = () => {
   const [products, setProducts] = useState([]);
   const [isEditing, setIsEditing] = useState(false);
 
+  // 🔥 FIX: single backend source (NO env issues)
+  const BACKEND_URL = "https://ecommerce-backend-tc68.onrender.com";
+
   const emptyProduct = {
     _id: null,
     name: '',
@@ -25,17 +28,19 @@ const AdminDashBoard = () => {
     materials: [],
     colors: [],
     carats: [],
-    deliveryInfo: {
-      deliveryTime: '',
-      returnPolicy: '',
-      certification: '',
-    }
   };
 
   const [newProduct, setNewProduct] = useState(emptyProduct);
 
   /* =========================
-     FETCH PRODUCTS (SAFE)
+     ADMIN PROTECTION
+  ========================= */
+  if (!user?.isAdmin) {
+    return <Navigate to="/" replace />;
+  }
+
+  /* =========================
+     FETCH PRODUCTS
   ========================= */
   useEffect(() => {
     fetchProducts();
@@ -43,22 +48,13 @@ const AdminDashBoard = () => {
 
   const fetchProducts = async () => {
     try {
-      const res = await axios.get(
-        `${process.env.REACT_APP_BACKEND_URL}/api/products`
-      );
-      setProducts(res.data);
+      const res = await axios.get(`${BACKEND_URL}/api/products`);
+      setProducts(res.data || []);
     } catch (error) {
       console.error("Failed to fetch products:", error);
       alert("Error loading products");
     }
   };
-
-  /* =========================
-     ADMIN PROTECTION
-  ========================= */
-  if (!user || !user.isAdmin) {
-    return <Navigate to="/login" replace />;
-  }
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -75,11 +71,11 @@ const AdminDashBoard = () => {
 
     try {
       setLoadingAI(true);
+
       const token = localStorage.getItem('token');
-      if (!token) return alert("Login required");
 
       const res = await axios.post(
-        `${process.env.REACT_APP_BACKEND_URL}/api/ai/generate-description`,
+        `${BACKEND_URL}/api/ai/generate-description`,
         {
           name: newProduct.name,
           category: newProduct.category,
@@ -91,6 +87,7 @@ const AdminDashBoard = () => {
         ...prev,
         description: res.data.description,
       }));
+
     } catch {
       alert('AI generation failed');
     } finally {
@@ -107,7 +104,7 @@ const AdminDashBoard = () => {
 
     try {
       await axios.post(
-        `${process.env.REACT_APP_BACKEND_URL}/api/products`,
+        `${BACKEND_URL}/api/products`,
         {
           ...newProduct,
           price: Number(newProduct.price),
@@ -120,8 +117,8 @@ const AdminDashBoard = () => {
       alert('Product added');
       setNewProduct(emptyProduct);
       fetchProducts();
-    } catch (err) {
-      console.error(err);
+
+    } catch {
       alert("Add failed");
     }
   };
@@ -131,11 +128,10 @@ const AdminDashBoard = () => {
   ========================= */
   const updateProduct = async () => {
     const token = localStorage.getItem('token');
-    if (!token) return alert("Login required");
 
     try {
       await axios.put(
-        `${process.env.REACT_APP_BACKEND_URL}/api/products/${newProduct._id}`,
+        `${BACKEND_URL}/api/products/${newProduct._id}`,
         {
           ...newProduct,
           price: Number(newProduct.price),
@@ -149,8 +145,8 @@ const AdminDashBoard = () => {
       setIsEditing(false);
       setNewProduct(emptyProduct);
       fetchProducts();
-    } catch (err) {
-      console.error(err);
+
+    } catch {
       alert("Update failed");
     }
   };
@@ -159,28 +155,24 @@ const AdminDashBoard = () => {
      DELETE PRODUCT
   ========================= */
   const deleteProduct = async (id) => {
-    if (!window.confirm('Delete this product permanently?')) return;
+    if (!window.confirm('Delete this product?')) return;
 
     const token = localStorage.getItem('token');
-    if (!token) return alert("Login required");
 
     try {
       await axios.delete(
-        `${process.env.REACT_APP_BACKEND_URL}/api/products/${id}`,
+        `${BACKEND_URL}/api/products/${id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      alert('Product deleted');
+      alert('Deleted');
       fetchProducts();
-    } catch (err) {
-      console.error(err);
+
+    } catch {
       alert("Delete failed");
     }
   };
 
-  /* =========================
-     EDIT PRODUCT
-  ========================= */
   const editProduct = (product) => {
     setIsEditing(true);
     setNewProduct({
@@ -196,63 +188,42 @@ const AdminDashBoard = () => {
   return (
     <div style={styles.container}>
       <h1 style={styles.heading}>Admin Dashboard</h1>
+
       <h4 style={styles.subHeading}>
         {isEditing ? 'Edit Product' : 'Add New Product'}
       </h4>
 
-      {/* INPUTS */}
       <input name="name" placeholder="Product Name" value={newProduct.name} onChange={handleInputChange} style={styles.input} />
-
-      <input placeholder="Materials" value={(newProduct.materials || []).join(',')} onChange={e =>
-        setNewProduct(p => ({ ...p, materials: e.target.value.split(',').map(v => v.trim()) }))
-      } style={styles.input} />
-
-      <input placeholder="Colors" value={(newProduct.colors || []).join(',')} onChange={e =>
-        setNewProduct(p => ({ ...p, colors: e.target.value.split(',').map(v => v.trim()) }))
-      } style={styles.input} />
-
-      <input placeholder="Carats" value={(newProduct.carats || []).join(',')} onChange={e =>
-        setNewProduct(p => ({ ...p, carats: e.target.value.split(',').map(v => v.trim()) }))
-      } style={styles.input} />
-
-      <input type="number" placeholder="Old Price" value={newProduct.oldPrice} onChange={e =>
-        setNewProduct(p => ({ ...p, oldPrice: e.target.value }))
-      } style={styles.input} />
-
-      <label>
-        <input type="checkbox" checked={newProduct.onSale} onChange={e =>
-          setNewProduct(p => ({ ...p, onSale: e.target.checked }))
-        } />
-        On Sale
-      </label>
 
       <input name="category" placeholder="Category" value={newProduct.category} onChange={handleInputChange} style={styles.input} />
 
       <button onClick={generateAIDescription} style={styles.aiButton}>
-        {loadingAI ? '✨ Generating...' : '🤖 Generate AI Description'}
+        {loadingAI ? 'Generating...' : 'Generate AI Description'}
       </button>
 
       <textarea name="description" value={newProduct.description} onChange={handleInputChange} style={styles.textarea} />
 
-      <input type="number" name="price" placeholder="Price" value={newProduct.price} onChange={handleInputChange} style={styles.input} />
+      <input name="price" type="number" placeholder="Price" value={newProduct.price} onChange={handleInputChange} style={styles.input} />
+
       <input name="image" placeholder="Image URL" value={newProduct.image} onChange={handleInputChange} style={styles.input} />
-      <input type="number" name="stock" placeholder="Stock" value={newProduct.stock} onChange={handleInputChange} style={styles.input} />
+
+      <input name="stock" type="number" placeholder="Stock" value={newProduct.stock} onChange={handleInputChange} style={styles.input} />
 
       <button onClick={isEditing ? updateProduct : addProduct} style={styles.button}>
-        {isEditing ? '💾 Update Product' : '➕ Add Product'}
+        {isEditing ? 'Update Product' : 'Add Product'}
       </button>
 
       <hr />
 
-      <h3>Existing Products</h3>
+      <h3>Products</h3>
 
       {products.map(p => (
         <div key={p._id} style={styles.productRow}>
           <b>{p.name}</b> — ${p.price}
 
           <div>
-            <button onClick={() => editProduct(p)}>✏️</button>
-            <button onClick={() => deleteProduct(p._id)} style={{ marginLeft: 8 }}>🗑</button>
+            <button onClick={() => editProduct(p)}>Edit</button>
+            <button onClick={() => deleteProduct(p._id)}>Delete</button>
           </div>
         </div>
       ))}
