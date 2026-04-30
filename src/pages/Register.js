@@ -5,9 +5,11 @@ import { useNavigate, Link } from 'react-router-dom';
 const Register = () => {
   const navigate = useNavigate();
 
-  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+  // ✅ FIX 1: Safe fallback (prevents undefined crash)
+  const BACKEND_URL =
+    process.env.REACT_APP_BACKEND_URL ||
+    "https://ecommerce-backend-tc68.onrender.com";
 
-  // 🔍 DEBUG LOG 1: Check env variable
   console.log("BACKEND_URL =", BACKEND_URL);
 
   const [name, setName] = useState('');
@@ -21,28 +23,17 @@ const Register = () => {
   const handleRegister = async (e) => {
     e.preventDefault();
 
-    // 🔍 DEBUG LOG 2: Button click check
-    console.log("REGISTER BUTTON CLICKED");
-
     setError('');
     setLoading(true);
 
     if (password !== confirmPassword) {
-      console.log("PASSWORD MISMATCH");
       setLoading(false);
       return setError('Passwords do not match');
     }
 
-    // 🔍 DEBUG LOG 3: Data being sent
-    console.log("FORM DATA:", {
-      name,
-      email,
-      password,
-    });
-
+    // ✅ FIX 2: Ensure correct URL
     const url = `${BACKEND_URL}/api/auth/register`;
 
-    // 🔍 DEBUG LOG 4: Final API URL
     console.log("REQUEST URL:", url);
 
     try {
@@ -52,20 +43,15 @@ const Register = () => {
         password,
       });
 
-      // 🔍 DEBUG LOG 5: Response check
-      console.log("RESPONSE:", res.data);
-
       const { token, user } = res.data;
 
       if (!token || !user) {
-        console.log("INVALID RESPONSE FORMAT");
         throw new Error('Invalid server response');
       }
 
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
 
-      console.log("REGISTER SUCCESS");
       navigate('/');
 
     } catch (err) {
@@ -121,7 +107,7 @@ const Register = () => {
             required
           />
 
-          <label className="show-password">
+          <label>
             <input
               type="checkbox"
               checked={showPassword}
@@ -130,14 +116,14 @@ const Register = () => {
             Show password
           </label>
 
-          {error && <p className="auth-error">{error}</p>}
+          {error && <p style={{ color: 'red' }}>{error}</p>}
 
           <button type="submit" disabled={loading}>
             {loading ? 'Creating account...' : 'Register'}
           </button>
         </form>
 
-        <p className="auth-footer">
+        <p>
           Already have an account? <Link to="/login">Login</Link>
         </p>
 
