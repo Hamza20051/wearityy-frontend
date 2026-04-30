@@ -1,130 +1,24 @@
-import React, { useState } from 'react';
-import axios from 'axios';
-import { useNavigate, Link } from 'react-router-dom';
+import React from 'react';
+import { Link } from 'react-router-dom';
 
 const Register = () => {
-  const navigate = useNavigate();
-
-  // ✅ FIX 1: Safe fallback (prevents undefined crash)
-  const BACKEND_URL =
-    process.env.REACT_APP_BACKEND_URL ||
-    "https://ecommerce-backend-tc68.onrender.com";
-
-  console.log("BACKEND_URL =", BACKEND_URL);
-
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-
-  const handleRegister = async (e) => {
-    e.preventDefault();
-
-    setError('');
-    setLoading(true);
-
-    if (password !== confirmPassword) {
-      setLoading(false);
-      return setError('Passwords do not match');
-    }
-
-    // ✅ FIX 2: Ensure correct URL
-    const url = `${BACKEND_URL}/api/auth/register`;
-
-    console.log("REQUEST URL:", url);
-
-    try {
-      const res = await axios.post(url, {
-        name,
-        email,
-        password,
-      });
-
-      const { token, user } = res.data;
-
-      if (!token || !user) {
-        throw new Error('Invalid server response');
-      }
-
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-
-      navigate('/');
-
-    } catch (err) {
-      console.log("REGISTER ERROR:", err);
-
-      setError(
-        err.response?.data?.message ||
-        err.message ||
-        'Something went wrong'
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <div className="auth-page">
       <div className="auth-container">
 
-        <h2>Create Account ✨</h2>
-        <p className="auth-subtitle">Join our beauty community</p>
-
-        <form onSubmit={handleRegister}>
-          <input
-            type="text"
-            placeholder="Full Name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
-
-          <input
-            type="email"
-            placeholder="Email Address"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-
-          <input
-            type={showPassword ? 'text' : 'password'}
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-
-          <input
-            type={showPassword ? 'text' : 'password'}
-            placeholder="Confirm Password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            required
-          />
-
-          <label>
-            <input
-              type="checkbox"
-              checked={showPassword}
-              onChange={() => setShowPassword(!showPassword)}
-            />
-            Show password
-          </label>
-
-          {error && <p style={{ color: 'red' }}>{error}</p>}
-
-          <button type="submit" disabled={loading}>
-            {loading ? 'Creating account...' : 'Register'}
-          </button>
-        </form>
+        <h2>Guest Checkout Enabled 🛒</h2>
 
         <p>
-          Already have an account? <Link to="/login">Login</Link>
+          Customer registration is disabled.
+          You can shop directly without an account.
+        </p>
+
+        <Link to="/products">
+          <button>Go Shopping</button>
+        </Link>
+
+        <p style={{ marginTop: "10px" }}>
+          Already an admin? <Link to="/login">Admin Login</Link>
         </p>
 
       </div>
