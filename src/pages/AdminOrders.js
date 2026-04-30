@@ -11,16 +11,14 @@ const AdminOrders = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
 
-  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+  // 🔥 FIX: hard backend URL (no env issues on Vercel)
+  const BACKEND_URL = "https://ecommerce-backend-tc68.onrender.com";
+
   const WHATSAPP = "923460051459";
 
   /* =========================
      FETCH ORDERS
   ========================= */
-  useEffect(() => {
-    fetchOrders();
-  }, []);
-
   const fetchOrders = async () => {
     const token = localStorage.getItem('token');
 
@@ -31,17 +29,24 @@ const AdminOrders = () => {
     }
 
     try {
-      const res = await axios.get(`${BACKEND_URL}/api/orders`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await axios.get(
+        `${BACKEND_URL}/api/orders`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
-      setOrders(res.data);
+      setOrders(res.data || []);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to fetch orders');
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchOrders();
+  }, []);
 
   /* =========================
      UPDATE STATUS
@@ -59,8 +64,6 @@ const AdminOrders = () => {
       );
 
       alert(`Order marked as ${status}`);
-
-      // refresh
       fetchOrders();
     } catch (err) {
       console.error(err);
@@ -71,13 +74,11 @@ const AdminOrders = () => {
   /* =========================
      ADMIN PROTECTION
   ========================= */
-  if (!user || !user.isAdmin) {
-    return <Navigate to="/login" replace />;
+  if (!user?.isAdmin) {
+    return <Navigate to="/" replace />;
   }
 
-  if (loading) {
-    return <div className="container mt-4">Loading orders...</div>;
-  }
+  if (loading) return <div className="container mt-4">Loading orders...</div>;
 
   if (error) {
     return (
@@ -90,6 +91,7 @@ const AdminOrders = () => {
 
   return (
     <div className="container mt-4">
+
       <h2>All Orders</h2>
 
       {orders.length === 0 ? (
@@ -103,15 +105,15 @@ const AdminOrders = () => {
             <p><b>Name:</b> {order.shippingInfo.name}</p>
             <p><b>Email:</b> {order.shippingInfo.email}</p>
             <p><b>Phone:</b> {order.shippingInfo.phone}</p>
+
             <p>
               <b>Address:</b>{" "}
               {order.shippingInfo.address}, {order.shippingInfo.city} - {order.shippingInfo.postalCode}
             </p>
 
-            <p><b>Payment Method:</b> {order.paymentMethod}</p>
+            <p><b>Payment:</b> {order.paymentMethod}</p>
             <p><b>Total:</b> ${order.totalPrice}</p>
 
-            {/* STATUS BADGE */}
             <p>
               <b>Status:</b>{" "}
               <span className={`status ${order.status || "Pending"}`}>
@@ -119,7 +121,6 @@ const AdminOrders = () => {
               </span>
             </p>
 
-            {/* PRODUCTS */}
             <h6>Products:</h6>
             <ul>
               {order.products.map((p, i) => (
@@ -129,7 +130,6 @@ const AdminOrders = () => {
               ))}
             </ul>
 
-            {/* ADMIN ACTIONS */}
             <div style={{ marginTop: "10px" }}>
 
               <button onClick={() => updateStatus(order._id, "Confirmed")}>
@@ -143,9 +143,8 @@ const AdminOrders = () => {
                 Delivered
               </button>
 
-              {/* WHATSAPP BUTTON */}
               <a
-                href={`https://wa.me/${WHATSAPP}?text=Your%20order%20${order._id}%20status%20is%20${order.status}`}
+                href={`https://wa.me/${WHATSAPP}?text=Order%20${order._id}%20is%20${order.status}`}
                 target="_blank"
                 rel="noreferrer"
                 style={{
@@ -157,7 +156,7 @@ const AdminOrders = () => {
                   textDecoration: "none"
                 }}
               >
-                WhatsApp Update
+                WhatsApp
               </a>
 
             </div>
