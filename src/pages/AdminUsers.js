@@ -7,10 +7,11 @@ const AdminUsers = () => {
 
   const user = JSON.parse(localStorage.getItem('user'));
 
-  /* =========================
-     SAFETY CHECK
-  ========================= */
+  // ⚠️ Admin token (still frontend-based, but OK for now)
   const token = user?.token;
+
+  // 🔥 FIX: hard backend URL (avoid env issues)
+  const BACKEND_URL = "https://ecommerce-backend-tc68.onrender.com";
 
   /* =========================
      FETCH USERS
@@ -24,7 +25,7 @@ const AdminUsers = () => {
 
     try {
       const res = await axios.get(
-        `${process.env.REACT_APP_BACKEND_URL}/api/admin/users`,
+        `${BACKEND_URL}/api/admin/users`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -32,7 +33,7 @@ const AdminUsers = () => {
         }
       );
 
-      setUsers(res.data);
+      setUsers(res.data || []);
     } catch (error) {
       console.error('Failed to fetch users', error);
       alert("Failed to load users");
@@ -41,25 +42,21 @@ const AdminUsers = () => {
     }
   }, [token]);
 
-  /* =========================
-     USE EFFECT
-  ========================= */
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
 
-  /* =========================
-     LOADING
-  ========================= */
   if (loading) {
     return <p className="text-center mt-5">Loading users...</p>;
   }
 
   return (
     <div className="container mt-4">
+
       <h2 className="text-center mb-4">Admin – Users</h2>
 
       <table className="table table-bordered table-hover">
+
         <thead className="table-dark">
           <tr>
             <th>Name</th>
@@ -76,15 +73,13 @@ const AdminUsers = () => {
 
               <td>
                 <button
-                  className={`btn btn-sm ${
-                    u.isAdmin ? 'btn-danger' : 'btn-success'
-                  }`}
+                  className={`btn btn-sm ${u.isAdmin ? 'btn-danger' : 'btn-success'}`}
                   onClick={async () => {
                     if (!token) return alert("Login required");
 
                     try {
                       await axios.put(
-                        `${process.env.REACT_APP_BACKEND_URL}/api/admin/toggle-admin/${u._id}`,
+                        `${BACKEND_URL}/api/admin/toggle-admin/${u._id}`,
                         {},
                         {
                           headers: {
@@ -107,6 +102,7 @@ const AdminUsers = () => {
             </tr>
           ))}
         </tbody>
+
       </table>
     </div>
   );
