@@ -1,32 +1,14 @@
-// src/store/reducers/authReducers.js
-
-// Safely load user and token from localStorage
-let userFromStorage = null;
-let isAdminFromStorage = false;
-
-try {
-  const storedUser = localStorage.getItem("user");
-  if (storedUser && storedUser !== "undefined") {
-    userFromStorage = JSON.parse(storedUser);
-    isAdminFromStorage = userFromStorage?.isAdmin || false;
-  }
-} catch (error) {
-  console.error("Error parsing user from localStorage:", error);
-}
-
-const tokenFromStorage = localStorage.getItem("token");
-
 const initialState = {
-  user: userFromStorage,
-  token: tokenFromStorage,
-  isAuthenticated: !!tokenFromStorage,
-  isAdmin: isAdminFromStorage,
+  user: null,
+  token: null,
+  isAuthenticated: false,
+  isAdmin: false,
 };
 
 const authReducer = (state = initialState, action) => {
   switch (action.type) {
     case "LOGIN":
-      // Save to localStorage correctly
+      // ONLY ADMIN LOGIN
       localStorage.setItem("user", JSON.stringify(action.payload.user));
       localStorage.setItem("token", action.payload.token);
 
@@ -39,16 +21,11 @@ const authReducer = (state = initialState, action) => {
       };
 
     case "LOGOUT":
-      // Clear localStorage
       localStorage.removeItem("user");
       localStorage.removeItem("token");
 
       return {
-        ...state,
-        user: null,
-        token: null,
-        isAuthenticated: false,
-        isAdmin: false,
+        ...initialState,
       };
 
     default:
