@@ -6,7 +6,8 @@ import "./ProductDetail.css";
 const ProductDetail = () => {
   const { id } = useParams();
 
-  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+  // 🔥 FIX: hard backend URL (no env issues)
+  const BACKEND_URL = "https://ecommerce-backend-tc68.onrender.com";
 
   const [product, setProduct] = useState(null);
   const [quantity, setQuantity] = useState(1);
@@ -42,21 +43,18 @@ const ProductDetail = () => {
     };
 
     fetchProduct();
-  }, [id, BACKEND_URL]);
+  }, [id]);
 
   const handleAddToCart = async () => {
-    const user = JSON.parse(localStorage.getItem("user"));
-
-    if (!user) {
-      alert("Please login to add items to cart");
-      return;
-    }
-
     try {
       setAdding(true);
 
+      // 🛒 GUEST CART (NO LOGIN REQUIRED)
+      const guestId = localStorage.getItem("guestId") || crypto.randomUUID();
+      localStorage.setItem("guestId", guestId);
+
       await axios.post(
-        `${BACKEND_URL}/api/cart/${user.id}`,
+        `${BACKEND_URL}/api/cart/${guestId}`,
         {
           productId: product._id,
           quantity,
@@ -69,6 +67,7 @@ const ProductDetail = () => {
       alert("Added to cart 🛒");
 
     } catch (err) {
+      console.log(err);
       alert("Failed to add to cart");
     } finally {
       setAdding(false);
@@ -148,37 +147,6 @@ const ProductDetail = () => {
             )}
             <span className="current-price">${product.price}</span>
           </div>
-
-          {/* VARIANTS (same as yours, unchanged) */}
-          {product.materials?.length > 0 && (
-            <div className="variant-section">
-              <h4>Material</h4>
-              {product.materials.map(m => (
-                <button
-                  key={m}
-                  className={selectedMaterial === m ? "variant active" : "variant"}
-                  onClick={() => setSelectedMaterial(m)}
-                >
-                  {m}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {product.colors?.length > 0 && (
-            <div className="variant-section">
-              <h4>Color</h4>
-              {product.colors.map(c => (
-                <button
-                  key={c}
-                  className={selectedColor === c ? "variant active" : "variant"}
-                  onClick={() => setSelectedColor(c)}
-                >
-                  {c}
-                </button>
-              ))}
-            </div>
-          )}
 
           {/* STOCK */}
           <p className="stock-info">
