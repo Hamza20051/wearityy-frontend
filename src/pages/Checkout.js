@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+// 🔥 FIX: hard backend URL (no env issues)
+const BACKEND_URL = "https://ecommerce-backend-tc68.onrender.com";
 
 const Checkout = () => {
   const [name, setName] = useState('');
@@ -17,22 +18,29 @@ const Checkout = () => {
 
   const navigate = useNavigate();
 
-  // ✅ YOUR DETAILS
   const WHATSAPP_NUMBER = "923460051459";
   const ACCOUNT_NUMBER = "03367051459";
   const STORE_NAME = "Hafiz Hamza Khalid";
 
+  // 🛒 GUEST ID SYSTEM
+  const getGuestId = () => {
+    let guestId = localStorage.getItem("guestId");
+    if (!guestId) {
+      guestId = crypto.randomUUID();
+      localStorage.setItem("guestId", guestId);
+    }
+    return guestId;
+  };
+
   useEffect(() => {
     const fetchCart = async () => {
-      const user = JSON.parse(localStorage.getItem('user'));
-      if (!user) return;
-
-      setName(user.name || '');
-      setEmail(user.email || '');
-      setPhone(user.phone || '');
-
       try {
-        const res = await axios.get(`${BACKEND_URL}/api/cart/${user.id}`);
+        const guestId = getGuestId();
+
+        const res = await axios.get(
+          `${BACKEND_URL}/api/cart/${guestId}`
+        );
+
         setCartItems(res.data.products || []);
       } catch (err) {
         console.error('Cart fetch failed:', err);
@@ -64,9 +72,6 @@ const Checkout = () => {
   };
 
   const placeOrder = async () => {
-    const user = JSON.parse(localStorage.getItem('user'));
-    if (!user) return alert('You must be logged in');
-
     if (!name || !email || !phone || !address || !city || !postalCode) {
       return alert('Please fill in all required fields');
     }
@@ -75,8 +80,10 @@ const Checkout = () => {
     if (!isStockValid) return;
 
     try {
+      const guestId = getGuestId();
+
       await axios.post(`${BACKEND_URL}/api/orders`, {
-        user: user.id,
+        guestId,
         products: cartItems.map((item) => ({
           product: item.product._id,
           quantity: item.quantity,
@@ -94,10 +101,11 @@ const Checkout = () => {
         totalPrice: calculateTotal(),
       });
 
-      await axios.delete(`${BACKEND_URL}/api/cart/${user.id}`);
+      await axios.delete(`${BACKEND_URL}/api/cart/${guestId}`);
 
       alert('Order placed successfully!');
       navigate('/order-confirmation');
+
     } catch (err) {
       console.error('Order error:', err);
       alert('Failed to place order');
@@ -110,7 +118,6 @@ const Checkout = () => {
 
         <h2>Checkout</h2>
 
-        {/* USER INFO */}
         <input type="text" placeholder="Full Name" value={name} onChange={(e) => setName(e.target.value)} />
         <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
         <input type="text" placeholder="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
@@ -118,63 +125,36 @@ const Checkout = () => {
         <input type="text" placeholder="City" value={city} onChange={(e) => setCity(e.target.value)} />
         <input type="text" placeholder="Postal Code" value={postalCode} onChange={(e) => setPostalCode(e.target.value)} />
 
-        {/* PAYMENT METHOD */}
         <label>Payment Method</label>
         <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)}>
           <option value="COD">Cash on Delivery</option>
-          <option value="SadaPay">SadaPay / NayaPay (Manual Transfer)</option>
+          <option value="SadaPay">SadaPay / NayaPay</option>
         </select>
 
-        {/* COD INFO */}
-        {paymentMethod === 'COD' && (
-          <p style={{ marginTop: "10px" }}>
-            💵 Pay cash when your order is delivered.
-          </p>
-        )}
-
-        {/* SADA / NAYAPAY INFO */}
         {paymentMethod === 'SadaPay' && (
-          <div style={{ marginTop: "10px", padding: "10px", border: "1px solid #ddd" }}>
-            <h4>📱 Manual Payment (SadaPay / NayaPay)</h4>
-
-            <p><b>Account Number:</b> {ACCOUNT_NUMBER}</p>
-            <p><b>Store Name:</b> {STORE_NAME}</p>
-
-            <p style={{ color: "red" }}>
-              ⚠ After payment, send screenshot on WhatsApp for confirmation
-            </p>
+          <div style={{ marginTop: "10px" }}>
+            <p><b>Account:</b> {ACCOUNT_NUMBER}</p>
+            <p><b>Store:</b> {STORE_NAME}</p>
 
             <a
               href={`https://wa.me/${WHATSAPP_NUMBER}`}
               target="_blank"
               rel="noreferrer"
-              style={{
-                display: "inline-block",
-                marginTop: "10px",
-                background: "green",
-                color: "white",
-                padding: "10px",
-                borderRadius: "5px",
-                textDecoration: "none"
-              }}
             >
-              📲 Send Screenshot on WhatsApp
+              Send Payment Screenshot
             </a>
           </div>
         )}
 
-        {/* DISCOUNT */}
         <input
           type="text"
-          placeholder="Discount Code (Optional)"
+          placeholder="Discount Code"
           value={discountCode}
           onChange={(e) => setDiscountCode(e.target.value)}
         />
 
-        {/* TOTAL */}
         <h4>Total: ${calculateTotal()}</h4>
 
-        {/* PLACE ORDER */}
         <button className="place-order-btn" onClick={placeOrder}>
           Place Order
         </button>
