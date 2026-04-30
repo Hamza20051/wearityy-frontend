@@ -10,11 +10,9 @@ const Home = () => {
   const [products, setProducts] = useState([]);
   const [categoryFilter, setCategoryFilter] = useState('');
 
-  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+  // 🔥 FIX: hard backend URL (no env issues)
+  const BACKEND_URL = "https://ecommerce-backend-tc68.onrender.com";
 
-  /* =========================
-     FETCH PRODUCTS
-  ========================= */
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -33,11 +31,8 @@ const Home = () => {
     };
 
     fetchProducts();
-  }, [categoryFilter, BACKEND_URL]);
+  }, [categoryFilter]);
 
-  /* =========================
-     SLIDER SETTINGS
-  ========================= */
   const sliderSettings = {
     dots: true,
     infinite: true,
@@ -50,9 +45,6 @@ const Home = () => {
     fade: true
   };
 
-  /* =========================
-     CATEGORIES
-  ========================= */
   const categories = ["Earrings", "Rings", "Necklaces", "Bracelets", "Bands"];
 
   return (
@@ -62,24 +54,15 @@ const Home = () => {
       <section className="hero-slider">
         <Slider {...sliderSettings}>
           <div className="slider-item">
-            <img
-              src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQAs44qzUuTYMl2ZrLDT-6djaZB4iPfoYvs2g&s"
-              alt="banner1"
-            />
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQAs44qzUuTYMl2ZrLDT-6djaZB4iPfoYvs2g&s" alt="banner1" />
           </div>
 
           <div className="slider-item">
-            <img
-              src="https://akns-images.eonline.com/eol_images/Entire_Site/20221119/rs_1024x759-221219151049-What-to-Buy-With-Sephora-Gift-Cards-2.jpg"
-              alt="banner2"
-            />
+            <img src="https://akns-images.eonline.com/eol_images/Entire_Site/20221119/rs_1024x759-221219151049-What-to-Buy-With-Sephora-Gift-Cards-2.jpg" alt="banner2" />
           </div>
 
           <div className="slider-item">
-            <img
-              src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR-Si_CYcApyyZVjdTLLDiXK365zqm3ODBWwQ&s"
-              alt="banner3"
-            />
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR-Si_CYcApyyZVjdTLLDiXK365zqm3ODBWwQ&s" alt="banner3" />
           </div>
         </Slider>
       </section>
