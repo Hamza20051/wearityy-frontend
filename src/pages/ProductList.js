@@ -11,13 +11,13 @@ const ProductList = () => {
   const [ratingFilter, setRatingFilter] = useState('');
   const [search, setSearch] = useState('');
 
-  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+  // 🔥 FIX: hard backend URL (prevents Vercel env issues)
+  const BACKEND_URL = "https://ecommerce-backend-tc68.onrender.com";
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         let query = '';
-
         const params = [];
 
         if (sort) params.push(`sort=${sort}`);
@@ -49,16 +49,15 @@ const ProductList = () => {
     priceMin,
     priceMax,
     ratingFilter,
-    search,
-    BACKEND_URL
+    search
   ]);
 
   const categories = [
     'Nails',
     'Bands',
     'Rings',
-    'Nackles',
-    'Braclets',
+    'Necklaces',
+    'Bracelets',
     'Earrings'
   ];
 
@@ -67,7 +66,7 @@ const ProductList = () => {
 
       <h1>Our Collection ✨</h1>
 
-      {/* Search */}
+      {/* SEARCH */}
       <div className="search-bar">
         <input
           type="text"
@@ -77,7 +76,7 @@ const ProductList = () => {
         />
       </div>
 
-      {/* Filters */}
+      {/* FILTERS */}
       <div className="filters">
 
         <select value={sort} onChange={(e) => setSort(e.target.value)}>
@@ -111,7 +110,7 @@ const ProductList = () => {
 
       </div>
 
-      {/* Products */}
+      {/* PRODUCTS */}
       <div className="product-grid">
 
         {products.length === 0 ? (
