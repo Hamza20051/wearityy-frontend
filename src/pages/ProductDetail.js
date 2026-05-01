@@ -16,7 +16,6 @@ const ProductDetail = () => {
   const [selectedMaterial, setSelectedMaterial] = useState("");
   const [selectedColor, setSelectedColor] = useState("");
   const [selectedCarat, setSelectedCarat] = useState("");
-  const [wishlisted, setWishlisted] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -127,12 +126,7 @@ const ProductDetail = () => {
           <div className="title-row">
             <h1>{product.name}</h1>
 
-            <button
-              className={`wishlist-icon ${wishlisted ? "active" : ""}`}
-              onClick={() => setWishlisted(!wishlisted)}
-            >
-              ♥
-            </button>
+         
           </div>
 
           <p>{product.description}</p>
