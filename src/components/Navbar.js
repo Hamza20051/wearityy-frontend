@@ -37,13 +37,15 @@ const Navbar = () => {
 
         <nav>
 
-          {/* PUBLIC ROUTES (NO LOGIN REQUIRED) */}
+          {/* PUBLIC ROUTES */}
           <Link to="/" onClick={() => setOpen(false)}>Home</Link>
           <Link to="/products" onClick={() => setOpen(false)}>Products</Link>
+
+          {/* 🛒 Guest shopping (NO LOGIN REQUIRED) */}
           <Link to="/cart" onClick={() => setOpen(false)}>Cart</Link>
           <Link to="/checkout" onClick={() => setOpen(false)}>Checkout</Link>
 
-          {/* ADMIN ONLY ROUTES */}
+          {/* 👑 ADMIN ONLY ROUTES */}
           {user?.isAdmin && (
             <>
               <Link to="/admin/dashboard" onClick={() => setOpen(false)}>
@@ -56,7 +58,14 @@ const Navbar = () => {
             </>
           )}
 
-          {/* LOGOUT (ONLY IF USER EXISTS) */}
+          {/* 🔐 LOGIN (ADMIN ONLY) */}
+          {!user && (
+            <Link to="/login" onClick={() => setOpen(false)}>
+              Admin Login
+            </Link>
+          )}
+
+          {/* 🚪 LOGOUT */}
           {user && (
             <button className="logout" onClick={handleLogout}>
               Logout
