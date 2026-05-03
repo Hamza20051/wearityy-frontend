@@ -1,22 +1,28 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../store/actions/authActions";
 import "./Navbar.css";
 
 const Navbar = () => {
   const [open, setOpen] = useState(false);
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
+  const [showProducts, setShowProducts] = useState(false);
 
+  const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.user);
 
   const handleLogout = () => {
     localStorage.clear();
     dispatch(logout());
-    navigate("/");
     setOpen(false);
   };
+
+  const categories = [
+    "Rings",
+    "Earrings",
+    "Necklaces",
+    "Bracelets"
+  ];
 
   return (
     <>
@@ -28,7 +34,7 @@ const Navbar = () => {
       {/* Overlay */}
       {open && <div className="overlay" onClick={() => setOpen(false)} />}
 
-      {/* Sidebar Menu */}
+      {/* Sidebar */}
       <aside className={`lux-menu ${open ? "open" : ""}`}>
 
         <div className="lux-header">
@@ -37,15 +43,47 @@ const Navbar = () => {
 
         <nav>
 
-          {/* PUBLIC ROUTES */}
-          <Link to="/" onClick={() => setOpen(false)}>Home</Link>
-          <Link to="/products" onClick={() => setOpen(false)}>Products</Link>
+          {/* HOME */}
+          <Link to="/" onClick={() => setOpen(false)}>
+            Home
+          </Link>
 
-          {/* 🛒 Guest shopping (NO LOGIN REQUIRED) */}
-          <Link to="/cart" onClick={() => setOpen(false)}>Cart</Link>
-          <Link to="/checkout" onClick={() => setOpen(false)}>Checkout</Link>
+          {/* =========================
+              PRODUCTS DROPDOWN
+          ========================= */}
+          <div
+            className="dropdown-parent"
+            onClick={() => setShowProducts(!showProducts)}
+          >
+            Products ▾
+          </div>
 
-          {/* 👑 ADMIN ONLY ROUTES */}
+          {showProducts && (
+            <div className="dropdown-child">
+
+              {categories.map((cat) => (
+                <Link
+                  key={cat}
+                  to={`/?category=${cat}`}
+                  onClick={() => setOpen(false)}
+                >
+                  {cat}
+                </Link>
+              ))}
+
+            </div>
+          )}
+
+          {/* CART + CHECKOUT (GUEST ACCESS) */}
+          <Link to="/cart" onClick={() => setOpen(false)}>
+            Cart
+          </Link>
+
+          <Link to="/checkout" onClick={() => setOpen(false)}>
+            Checkout
+          </Link>
+
+          {/* ADMIN ONLY */}
           {user?.isAdmin && (
             <>
               <Link to="/admin/dashboard" onClick={() => setOpen(false)}>
@@ -58,14 +96,7 @@ const Navbar = () => {
             </>
           )}
 
-          {/* 🔐 LOGIN (ADMIN ONLY) */}
-          {!user && (
-            <Link to="/login" onClick={() => setOpen(false)}>
-              Admin Login
-            </Link>
-          )}
-
-          {/* 🚪 LOGOUT */}
+          {/* LOGOUT */}
           {user && (
             <button className="logout" onClick={handleLogout}>
               Logout
