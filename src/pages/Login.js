@@ -1,61 +1,79 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { useNavigate, Link } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 
 const Login = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  /* =========================
-     LOGIN HANDLER (DISABLED FOR USERS)
-  ========================= */
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
+    setError('');
+    setLoading(true);
 
-    setError("User login is disabled. Admin access only.");
+    try {
+      const res = await axios.post(
+        `${process.env.REACT_APP_BACKEND_URL}/api/auth/login`,
+        { email, password }
+      );
+      const { token, user } = res.data;
+
+      // Save token and user in localStorage
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+
+      // Update Redux store
+      dispatch({ type: 'LOGIN', payload: { user, token } });
+
+      console.log('Logged in user:', user);
+      navigate('/'); // redirect to home
+    } catch (err) {
+      console.error('Login error:', err);
+      setError(err.response?.data?.message || 'Invalid email or password');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  /* =========================
-     UI
-  ========================= */
   return (
     <div className="auth-page">
       <div className="auth-container">
-
-        <h2>Admin Access 🔐</h2>
-        <p className="auth-subtitle">
-          This login is for admin only
-        </p>
+        <h2>Welcome Back 💖</h2>
+        <p className="auth-subtitle">Login to continue shopping</p>
 
         <form onSubmit={handleLogin}>
           <input
             type="email"
-            placeholder="Admin Email"
+            placeholder="Email Address"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            required
           />
 
           <input
             type="password"
-            placeholder="Admin Password"
+            placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            required
           />
 
           {error && <p className="auth-error">{error}</p>}
 
           <button type="submit" disabled={loading}>
-            Login
+            {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
 
         <p className="auth-footer">
-          Customer login is disabled — use guest checkout
+          Don’t have an account? <Link to="/signup">Register</Link>
         </p>
-
       </div>
     </div>
   );
