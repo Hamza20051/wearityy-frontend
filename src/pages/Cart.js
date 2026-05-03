@@ -1,206 +1,166 @@
-import React, { useEffect, useState, useRef } from 'react';
-import axios from 'axios';
-import { Link } from 'react-router-dom';
-import './Cart.css';
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { Link } from "react-router-dom";
+import { getGuestId } from "../helpers/guest";
+import "./Cart.css";
 
-// 🔥 FIX: hard backend URL (no env issues)
 const BACKEND_URL = "https://ecommerce-backend-tc68.onrender.com";
 
 const Cart = () => {
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const qtyTimer = useRef(null);
-
-  /* =========================
-     GUEST ID SYSTEM
-  ========================= */
-  const getGuestId = () => {
-    let guestId = localStorage.getItem("guestId");
-    if (!guestId) {
-      guestId = crypto.randomUUID();
-      localStorage.setItem("guestId", guestId);
-    }
-    return guestId;
-  };
 
   /* =========================
      FETCH CART
   ========================= */
+  const fetchCart = async () => {
+    try {
+      const guestId = getGuestId();
+
+      const res = await axios.get(
+        `${BACKEND_URL}/api/cart/${guestId}`
+      );
+
+      setCartItems(res.data.products || []);
+    } catch (err) {
+      console.error("Cart error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchCart = async () => {
-      try {
-        const guestId = getGuestId();
-
-        const res = await axios.get(
-          `${BACKEND_URL}/api/cart/${guestId}`
-        );
-
-        const products = res.data.products || [];
-
-        setCartItems(products);
-
-        localStorage.setItem("cart", JSON.stringify(products));
-
-      } catch (err) {
-        console.error('Failed to load cart', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
+    getGuestId(); // ensure ID exists
     fetchCart();
   }, []);
 
   /* =========================
-     UPDATE QUANTITY
+     UPDATE QUANTITY (FIXED)
   ========================= */
-  const handleUpdateQty = (productId, newQty, stock) => {
-    if (newQty < 1 || newQty > stock) return;
+  const updateQty = async (productId, newQty, currentQty) => {
+    if (newQty < 1) return;
 
-    setCartItems((prev) => {
-      const updated = prev.map((item) =>
-        item.product._id === productId
-          ? { ...item, quantity: newQty }
-          : item
-      );
+    try {
+      const guestId = getGuestId();
 
-      localStorage.setItem("cart", JSON.stringify(updated));
-      return updated;
-    });
+      const diff = newQty - currentQty;
 
-    clearTimeout(qtyTimer.current);
+      await axios.post(`${BACKEND_URL}/api/cart/${guestId}`, {
+        productId,
+        quantity: diff, // ✅ correct logic
+      });
 
-    qtyTimer.current = setTimeout(async () => {
-      try {
-        const guestId = getGuestId();
-
-        await axios.post(
-          `${BACKEND_URL}/api/cart/${guestId}`,
-          {
-            productId,
-            quantity: newQty,
-          }
-        );
-      } catch (err) {
-        console.error('Quantity sync failed', err);
-      }
-    }, 400);
+      fetchCart();
+    } catch (err) {
+      console.error("Update qty error:", err);
+    }
   };
 
   /* =========================
      REMOVE ITEM
   ========================= */
-  const handleRemove = async (productId) => {
+  const removeItem = async (productId) => {
     try {
       const guestId = getGuestId();
 
-      const res = await axios.delete(
+      await axios.delete(
         `${BACKEND_URL}/api/cart/${guestId}/${productId}`
       );
 
-      const products = res.data.products || [];
-
-      setCartItems(products);
-      localStorage.setItem("cart", JSON.stringify(products));
-
+      fetchCart();
     } catch (err) {
-      console.error('Failed to remove item', err);
+      console.error("Remove error:", err);
     }
   };
 
   /* =========================
-     TOTALS
+     TOTAL PRICE
   ========================= */
-  const subtotal = cartItems.reduce(
-    (sum, item) => sum + item.product.price * item.quantity,
+  const total = cartItems.reduce(
+    (sum, item) =>
+      sum + (item.product?.price || 0) * item.quantity,
     0
   );
-
-  const shipping = cartItems.length > 0 ? 5.99 : 0;
-  const total = subtotal + shipping;
 
   /* =========================
      UI
   ========================= */
   return (
     <div className="cart-page">
-      <h2>Your Cart</h2>
+      <h2>Shopping Cart</h2>
 
       {loading ? (
-        <p className="loading-text">Loading cart...</p>
+        <p className="loading-text">Loading...</p>
       ) : cartItems.length === 0 ? (
-        <p className="empty-text">Your cart is empty.</p>
+        <p className="empty-text">Your cart is empty</p>
       ) : (
         <>
           <div className="cart-items">
-
             {cartItems.map((item) => (
               <div key={item.product._id} className="cart-item">
-
-                <img src={item.product.image} alt={item.product.name} />
+                
+                <img
+                  src={item.product.image}
+                  alt={item.product.name}
+                />
 
                 <div className="cart-item-details">
                   <h4>{item.product.name}</h4>
-                  <p>Price: ${item.product.price}</p>
+                  <p>${item.product.price}</p>
 
+                  {/* QUANTITY CONTROL */}
                   <div className="cart-quantity">
                     <button
                       onClick={() =>
-                        handleUpdateQty(
+                        updateQty(
                           item.product._id,
                           item.quantity - 1,
-                          item.product.stock
+                          item.quantity
                         )
                       }
-                      disabled={item.quantity <= 1}
                     >
-                      −
+                      -
                     </button>
 
                     <span>{item.quantity}</span>
 
                     <button
                       onClick={() =>
-                        handleUpdateQty(
+                        updateQty(
                           item.product._id,
                           item.quantity + 1,
-                          item.product.stock
+                          item.quantity
                         )
                       }
-                      disabled={item.quantity >= item.product.stock}
                     >
                       +
                     </button>
                   </div>
 
+                  {/* REMOVE */}
                   <button
                     className="remove-btn"
-                    onClick={() => handleRemove(item.product._id)}
+                    onClick={() => removeItem(item.product._id)}
                   >
                     Remove
                   </button>
 
-                  {item.product.stock === 0 && (
+                  {/* STOCK WARNING */}
+                  {item.product.isOutOfStock && (
                     <p className="out-stock">Out of stock</p>
                   )}
                 </div>
-
               </div>
             ))}
-
           </div>
 
+          {/* SUMMARY */}
           <div className="cart-summary">
-            <h3>Cart Summary</h3>
+            <h3>Order Summary</h3>
 
             <div className="summary-row">
-              <span>Subtotal</span>
-              <span>${subtotal.toFixed(2)}</span>
-            </div>
-
-            <div className="summary-row">
-              <span>Shipping</span>
-              <span>${shipping.toFixed(2)}</span>
+              <span>Items</span>
+              <span>{cartItems.length}</span>
             </div>
 
             <div className="summary-row total">
@@ -213,7 +173,6 @@ const Cart = () => {
                 Proceed to Checkout
               </button>
             </Link>
-
           </div>
         </>
       )}
