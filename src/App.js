@@ -5,6 +5,7 @@ import { Provider } from 'react-redux';
 import './App.css';
 
 import store from './store/store';
+
 import "slick-carousel/slick/slick.css"; 
 import "slick-carousel/slick/slick-theme.css";
 
@@ -13,7 +14,7 @@ import Footer from './components/Footer';
 import Header from './components/Header';
 import AIChatbot from "./components/AIChatbot";
 
-import AdminUsers from './pages/AdminUsers';
+/* PAGES */
 import Home from './pages/Home';
 import ProductList from './pages/ProductList';
 import ProductDetail from './pages/ProductDetail';
@@ -21,8 +22,13 @@ import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import OrderConfirmation from './pages/OrderConfirmation';
 import SearchResults from "./pages/SearchResults";
+
 import AdminDashBoard from './pages/AdminDashBoard';
 import AdminOrders from './pages/AdminOrders';
+import AdminUsers from './pages/AdminUsers';
+
+/* AUTH PAGES */
+import Login from './pages/Login';
 
 /* =========================
    SCROLL TO TOP
@@ -35,11 +41,19 @@ const ScrollToTop = () => {
 };
 
 /* =========================
-   ADMIN ROUTE ONLY
+   ADMIN PROTECTION
 ========================= */
 const AdminRoute = ({ children }) => {
   const user = JSON.parse(localStorage.getItem('user'));
-  return user?.isAdmin ? children : <Navigate to="/" />;
+  return user?.isAdmin ? children : <Navigate to="/login" />;
+};
+
+/* =========================
+   AUTH GUARD (OPTIONAL UX)
+========================= */
+const AuthRoute = ({ children }) => {
+  const user = JSON.parse(localStorage.getItem('user'));
+  return user ? <Navigate to="/admin/dashboard" /> : children;
 };
 
 function App() {
@@ -57,7 +71,7 @@ function App() {
 
             <Routes>
 
-              {/* PUBLIC (NO LOGIN SYSTEM) */}
+              {/* PUBLIC ROUTES */}
               <Route path="/" element={<Home />} />
               <Route path="/products" element={<ProductList />} />
               <Route path="/products/:id" element={<ProductDetail />} />
@@ -66,7 +80,17 @@ function App() {
               <Route path="/order-confirmation" element={<OrderConfirmation />} />
               <Route path="/search" element={<SearchResults />} />
 
-              {/* ADMIN ONLY */}
+              {/* LOGIN ONLY */}
+              <Route 
+                path="/login" 
+                element={
+                  <AuthRoute>
+                    <Login />
+                  </AuthRoute>
+                } 
+              />
+
+              {/* ADMIN ROUTES */}
               <Route path="/admin/dashboard" element={
                 <AdminRoute>
                   <AdminDashBoard />
@@ -85,7 +109,7 @@ function App() {
                 </AdminRoute>
               } />
 
-              {/* REMOVE LOGIN ROUTES (NO NEED) */}
+              {/* FALLBACK */}
               <Route path="*" element={<Navigate to="/" />} />
 
             </Routes>
