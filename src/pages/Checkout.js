@@ -1,165 +1,119 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import { getGuestId } from "../helpers/guest";
 
-// 🔥 FIX: hard backend URL (no env issues)
 const BACKEND_URL = "https://ecommerce-backend-tc68.onrender.com";
 
 const Checkout = () => {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [address, setAddress] = useState('');
-  const [city, setCity] = useState('');
-  const [postalCode, setPostalCode] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState('COD');
-  const [discountCode, setDiscountCode] = useState('');
   const [cartItems, setCartItems] = useState([]);
+  const [paymentMethod, setPaymentMethod] = useState("SadaPay");
+  const [loading, setLoading] = useState(true);
+  const [placing, setPlacing] = useState(false);
 
   const navigate = useNavigate();
 
-  const WHATSAPP_NUMBER = "923460051459";
-  const ACCOUNT_NUMBER = "03367051459";
-  const STORE_NAME = "Hafiz Hamza Khalid";
-
-  // 🛒 GUEST ID SYSTEM
-  const getGuestId = () => {
-    let guestId = localStorage.getItem("guestId");
-    if (!guestId) {
-      guestId = crypto.randomUUID();
-      localStorage.setItem("guestId", guestId);
-    }
-    return guestId;
-  };
-
   useEffect(() => {
     const fetchCart = async () => {
-      try {
-        const guestId = getGuestId();
-
-        const res = await axios.get(
-          `${BACKEND_URL}/api/cart/${guestId}`
-        );
-
-        setCartItems(res.data.products || []);
-      } catch (err) {
-        console.error('Cart fetch failed:', err);
-      }
+      const res = await axios.get(
+        `${BACKEND_URL}/api/cart/${getGuestId()}`
+      );
+      setCartItems(res.data.products || []);
+      setLoading(false);
     };
 
     fetchCart();
   }, []);
 
-  const calculateTotal = () => {
-    return cartItems.reduce(
-      (total, item) => total + item.product.price * item.quantity,
+  const calculateTotal = () =>
+    cartItems.reduce(
+      (sum, i) => sum + (i.product?.price || 0) * i.quantity,
       0
     );
-  };
-
-  const validateStockBeforeCheckout = async () => {
-    for (const item of cartItems) {
-      const res = await axios.get(
-        `${BACKEND_URL}/api/products/${item.product._id}`
-      );
-
-      if (res.data.stock < item.quantity) {
-        alert(`Only ${res.data.stock} left for ${res.data.name}`);
-        return false;
-      }
-    }
-    return true;
-  };
 
   const placeOrder = async () => {
-    if (!name || !email || !phone || !address || !city || !postalCode) {
-      return alert('Please fill in all required fields');
-    }
-
-    const isStockValid = await validateStockBeforeCheckout();
-    if (!isStockValid) return;
+    if (cartItems.length === 0) return alert("Cart empty");
 
     try {
+      setPlacing(true);
+
       const guestId = getGuestId();
 
-      await axios.post(`${BACKEND_URL}/api/orders`, {
+      const res = await axios.post(`${BACKEND_URL}/api/orders`, {
         guestId,
-        products: cartItems.map((item) => ({
-          product: item.product._id,
-          quantity: item.quantity,
+        paymentMethod,
+        products: cartItems.map((i) => ({
+          product: i.product._id,
+          quantity: i.quantity,
         })),
         shippingInfo: {
-          name,
-          email,
-          phone,
-          address,
-          city,
-          postalCode,
+          name: "Guest User",
+          email: "guest@email.com",
+          phone: "000000000",
+          address: "Guest Address",
+          city: "N/A",
+          postalCode: "00000",
         },
-        paymentMethod,
-        discountCode,
         totalPrice: calculateTotal(),
       });
 
-      await axios.delete(`${BACKEND_URL}/api/cart/${guestId}`);
+      const orderId = res.data._id;
 
-      alert('Order placed successfully!');
-      navigate('/order-confirmation');
+      // 🔥 WhatsApp message
+      const msg = `Order ID: ${orderId}
+Total: Rs ${calculateTotal()}
+Payment via: ${paymentMethod}
+
+Screenshot sent`;
+
+      window.open(
+        `https://wa.me/923460051459?text=${encodeURIComponent(msg)}`
+      );
+
+      await axios.delete(
+        `${BACKEND_URL}/api/cart/${guestId}`
+      );
+
+      navigate("/order-confirmation");
 
     } catch (err) {
-      console.error('Order error:', err);
-      alert('Failed to place order');
+      alert("Order failed");
+    } finally {
+      setPlacing(false);
     }
   };
 
+  if (loading) return <p>Loading...</p>;
+
   return (
-    <div className="checkout-page">
-      <div className="checkout-container">
+    <div>
+      <h2>Checkout</h2>
 
-        <h2>Checkout</h2>
+      {/* PAYMENT OPTIONS */}
+      <h3>Select Payment</h3>
 
-        <input type="text" placeholder="Full Name" value={name} onChange={(e) => setName(e.target.value)} />
-        <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
-        <input type="text" placeholder="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
-        <input type="text" placeholder="Address" value={address} onChange={(e) => setAddress(e.target.value)} />
-        <input type="text" placeholder="City" value={city} onChange={(e) => setCity(e.target.value)} />
-        <input type="text" placeholder="Postal Code" value={postalCode} onChange={(e) => setPostalCode(e.target.value)} />
+      <select
+        value={paymentMethod}
+        onChange={(e) => setPaymentMethod(e.target.value)}
+      >
+        <option value="SadaPay">SadaPay</option>
+        <option value="NayaPay">NayaPay</option>
+        <option value="COD">Cash on Delivery</option>
+      </select>
 
-        <label>Payment Method</label>
-        <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)}>
-          <option value="COD">Cash on Delivery</option>
-          <option value="SadaPay">SadaPay / NayaPay</option>
-        </select>
+      {/* PAYMENT DETAILS */}
+      <p><b>SadaPay / NayaPay:</b> 03367051459</p>
+      <p><b>Name:</b> Hafiz Hamza Khalid</p>
 
-        {paymentMethod === 'SadaPay' && (
-          <div style={{ marginTop: "10px" }}>
-            <p><b>Account:</b> {ACCOUNT_NUMBER}</p>
-            <p><b>Store:</b> {STORE_NAME}</p>
+      <p style={{ color: "red" }}>
+        Send screenshot on WhatsApp: 03460051459
+      </p>
 
-            <a
-              href={`https://wa.me/${WHATSAPP_NUMBER}`}
-              target="_blank"
-              rel="noreferrer"
-            >
-              Send Payment Screenshot
-            </a>
-          </div>
-        )}
+      <h3>Total: Rs {calculateTotal()}</h3>
 
-        <input
-          type="text"
-          placeholder="Discount Code"
-          value={discountCode}
-          onChange={(e) => setDiscountCode(e.target.value)}
-        />
-
-        <h4>Total: ${calculateTotal()}</h4>
-
-        <button className="place-order-btn" onClick={placeOrder}>
-          Place Order
-        </button>
-
-      </div>
+      <button onClick={placeOrder} disabled={placing}>
+        {placing ? "Processing..." : "Place Order"}
+      </button>
     </div>
   );
 };
