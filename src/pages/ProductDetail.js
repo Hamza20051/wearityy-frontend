@@ -1,43 +1,29 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
+import { getGuestId } from "../helpers/guest";
 import "./ProductDetail.css";
+
+const BACKEND_URL = "https://ecommerce-backend-tc68.onrender.com";
 
 const ProductDetail = () => {
   const { id } = useParams();
-
-  // 🔥 FIX: hard backend URL (no env issues)
-  const BACKEND_URL = "https://ecommerce-backend-tc68.onrender.com";
 
   const [product, setProduct] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [adding, setAdding] = useState(false);
   const [mainImage, setMainImage] = useState("");
-  const [selectedMaterial, setSelectedMaterial] = useState("");
-  const [selectedColor, setSelectedColor] = useState("");
-  const [selectedCarat, setSelectedCarat] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        setError("");
+        const res = await axios.get(`${BACKEND_URL}/api/products/${id}`);
 
-        const res = await axios.get(
-          `${BACKEND_URL}/api/products/${id}`
-        );
-
-        const p = res.data;
-
-        setProduct(p);
-        setMainImage(p.images?.[0] || p.image);
-        setSelectedMaterial(p.materials?.[0] || "");
-        setSelectedColor(p.colors?.[0] || "");
-        setSelectedCarat(p.carats?.[0] || "");
-
+        setProduct(res.data);
+        setMainImage(res.data.images?.[0] || res.data.image);
       } catch (err) {
-        console.error(err);
-        setError("Failed to load product. Please try again.");
+        setError("Failed to load product");
       }
     };
 
@@ -45,127 +31,41 @@ const ProductDetail = () => {
   }, [id]);
 
   const handleAddToCart = async () => {
+    if (!product) return;
+
     try {
       setAdding(true);
 
-      // 🛒 GUEST CART (NO LOGIN REQUIRED)
-      const guestId = localStorage.getItem("guestId") || crypto.randomUUID();
-      localStorage.setItem("guestId", guestId);
+      const guestId = getGuestId();
 
-      await axios.post(
-        `${BACKEND_URL}/api/cart/${guestId}`,
-        {
-          productId: product._id,
-          quantity,
-          material: selectedMaterial,
-          color: selectedColor,
-          carat: selectedCarat,
-        }
-      );
+      await axios.post(`${BACKEND_URL}/api/cart/${guestId}`, {
+        productId: product._id,
+        quantity,
+      });
 
       alert("Added to cart 🛒");
-
     } catch (err) {
-      console.log(err);
+      console.error(err);
       alert("Failed to add to cart");
     } finally {
       setAdding(false);
     }
   };
 
-  if (error) {
-    return (
-      <div style={{ padding: 40, color: "red" }}>
-        {error}
-      </div>
-    );
-  }
-
-  if (!product) return <p style={{ padding: 40 }}>Loading...</p>;
-
-  const salePercentage =
-    product.onSale && product.oldPrice
-      ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
-      : 0;
+  if (error) return <p>{error}</p>;
+  if (!product) return <p>Loading...</p>;
 
   return (
-    <div className="product-detail-page">
+    <div>
+      <h1>{product.name}</h1>
 
-      <button className="back-btn" onClick={() => window.history.back()}>
-        ← Back to products
+      <img src={mainImage} alt="" width="300" />
+
+      <p>${product.price}</p>
+
+      <button onClick={handleAddToCart} disabled={adding}>
+        {adding ? "Adding..." : "Add to Cart"}
       </button>
-
-      <div className="product-detail-card">
-
-        {/* IMAGE */}
-        <div className="image-gallery">
-          <img
-            src={mainImage}
-            alt={product.name}
-            className="product-detail-image"
-          />
-
-          <div className="thumbnail-row">
-            {(product.images?.length ? product.images : [product.image]).map(
-              (img, index) => (
-                <img
-                  key={index}
-                  src={img}
-                  alt=""
-                  className={`thumbnail ${mainImage === img ? "active" : ""}`}
-                  onClick={() => setMainImage(img)}
-                />
-              )
-            )}
-          </div>
-        </div>
-
-        {/* INFO */}
-        <div className="product-detail-info">
-
-          <div className="title-row">
-            <h1>{product.name}</h1>
-
-         
-          </div>
-
-          <p>{product.description}</p>
-
-          {/* PRICE */}
-          <div className="price-row">
-            {product.onSale && product.oldPrice && (
-              <>
-                <span className="old-price">${product.oldPrice}</span>
-                <span className="sale-badge">-{salePercentage}%</span>
-              </>
-            )}
-            <span className="current-price">${product.price}</span>
-          </div>
-
-          {/* STOCK */}
-          <p className="stock-info">
-            {product.stock > 0
-              ? product.stock <= 5
-                ? `⚠️ Only ${product.stock} left in stock!`
-                : `In stock: ${product.stock}`
-              : "Out of Stock"}
-          </p>
-
-          {/* ADD TO CART */}
-          <button
-            className="add-to-cart-btn"
-            onClick={handleAddToCart}
-            disabled={adding || product.stock === 0}
-          >
-            {product.stock === 0
-              ? "Out of Stock"
-              : adding
-              ? "Adding..."
-              : "Add to Cart"}
-          </button>
-
-        </div>
-      </div>
     </div>
   );
 };
